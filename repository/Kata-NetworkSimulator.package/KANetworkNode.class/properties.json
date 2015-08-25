@@ -1,0 +1,14 @@
+{
+	"category" : "Kata-NetworkSimulator-Core",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"address" ],
+	"name" : "KANetworkNode",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }
