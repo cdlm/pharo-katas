@@ -6,9 +6,9 @@
 		 ],
 	"commentStamp" : "",
 	"instvars" : [
-		"address",
-		"outgoingLinks" ],
-	"name" : "KANetworkNode",
+		"source",
+		"destination" ],
+	"name" : "KANetworkLink",
 	"pools" : [
 		 ],
 	"super" : "Object",
