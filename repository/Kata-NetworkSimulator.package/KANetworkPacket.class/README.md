@@ -1,0 +1,1 @@
+I represent a packet transmitted over the network. I am a simple, immutable, value object.
