@@ -1,0 +1,1 @@
+I represent a uni-directional connection, transmitting packets between two nodes of a network.
