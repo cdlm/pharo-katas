@@ -2,7 +2,8 @@
 	"class" : {
 		 },
 	"instance" : {
+		"testLoopback" : "DamienPollet 8/27/2015 18:11",
 		"testNodeCreation" : "DamienPollet 8/25/2015 17:27",
-		"testNodeLinking" : "DamienPollet 8/25/2015 15:40",
+		"testNodeLinking" : "DamienPollet 8/27/2015 18:10",
 		"testPacketCreation" : "DamienPollet 8/26/2015 17:52",
-		"testPacketEmission" : "DamienPollet 8/27/2015 16:26" } }
+		"testPacketEmission" : "DamienPollet 8/27/2015 18:09" } }
