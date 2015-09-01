@@ -1,4 +1,4 @@
 packet handling
 receive: aPacket from: aLink
-	aPacket destinationAddres = address
+	aPacket destinationAddress = address
 		ifTrue: [ self consume: aPacket ]

@@ -1,0 +1,3 @@
+topology
+loopback
+	^ loopback

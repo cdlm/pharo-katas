@@ -1,8 +1,11 @@
 {
 	"class" : {
-		 },
+		"from:to:" : "DamienPollet 9/1/2015 15:03" },
 	"instance" : {
-		"connect:to:" : "DamienPollet 8/25/2015 15:45",
-		"destination" : "DamienPollet 8/25/2015 15:46",
-		"printOn:" : "DamienPollet 8/28/2015 11:47",
-		"transmit:" : "DamienPollet 8/31/2015 16:33" } }
+		"attach" : "DamienPollet 9/1/2015 15:01",
+		"destination" : "DamienPollet 9/1/2015 14:48:45",
+		"emit:" : "DamienPollet 9/1/2015 15:04",
+		"initializeFrom:to:" : "DamienPollet 9/1/2015 15:04",
+		"isTransmitting:" : "DamienPollet 9/1/2015 15:11",
+		"printOn:" : "DamienPollet 9/1/2015 14:48:45",
+		"transmit:" : "DamienPollet 9/1/2015 14:48:45" } }

@@ -1,15 +1,17 @@
 {
 	"class" : {
-		"withAddress:" : "DamienPollet 8/25/2015 15:21" },
+		"withAddress:" : "DamienPollet 9/1/2015 14:48:45" },
 	"instance" : {
-		"address" : "DamienPollet 8/25/2015 15:22",
-		"attach:" : "DamienPollet 8/25/2015 15:38",
-		"consume:" : "DamienPollet 9/1/2015 14:36",
-		"hasLinkTo:" : "DamienPollet 8/26/2015 15:50",
-		"initializeAddress:" : "DamienPollet 9/1/2015 14:35",
-		"linksTowards:do:" : "DamienPollet 9/1/2015 14:33",
-		"printOn:" : "DamienPollet 8/28/2015 11:46",
-		"receive:from:" : "DamienPollet 9/1/2015 14:36",
-		"receivedPackets" : "DamienPollet 9/1/2015 14:34",
-		"send:" : "DamienPollet 9/1/2015 14:33",
-		"send:via:" : "DamienPollet 9/1/2015 13:26" } }
+		"address" : "DamienPollet 9/1/2015 14:48:45",
+		"attach:" : "DamienPollet 9/1/2015 14:48:45",
+		"consume:" : "DamienPollet 9/1/2015 14:48:45",
+		"hasLinkTo:" : "DamienPollet 9/1/2015 14:48:45",
+		"hasReceived:" : "DamienPollet 9/1/2015 15:11",
+		"initializeAddress:" : "DamienPollet 9/1/2015 15:05",
+		"linksTowards:do:" : "DamienPollet 9/1/2015 14:58",
+		"loopback" : "DamienPollet 9/1/2015 14:59",
+		"printOn:" : "DamienPollet 9/1/2015 14:48:45",
+		"receive:from:" : "DamienPollet 9/1/2015 15:06",
+		"receivedPackets" : "DamienPollet 9/1/2015 14:48:45",
+		"send:" : "DamienPollet 9/1/2015 14:48:45",
+		"send:via:" : "DamienPollet 9/1/2015 14:48:45" } }
