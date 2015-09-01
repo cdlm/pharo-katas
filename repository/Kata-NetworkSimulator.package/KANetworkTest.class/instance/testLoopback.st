@@ -4,8 +4,6 @@ testLoopback
 	node := KANetworkNode withAddress: #address.
 	packet := KANetworkPacket from: #address to: #address payload: #payload.
 	
-	node emit: packet.
-	node transmit: packet.
+	node send: packet.
 	
-	self deny: (node emissionQueue includes: packet).
-	self assert: (node receptionQueue includes: packet)
+	self assert: (node receivedPackets includes: packet)

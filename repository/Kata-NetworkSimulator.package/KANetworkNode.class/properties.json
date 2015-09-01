@@ -8,8 +8,7 @@
 	"instvars" : [
 		"address",
 		"outgoingLinks",
-		"emissionQueue",
-		"receptionQueue" ],
+		"receivedPackets" ],
 	"name" : "KANetworkNode",
 	"pools" : [
 		 ],
