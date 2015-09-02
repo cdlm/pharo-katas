@@ -1,3 +1,3 @@
 testing
 hasReceived: aPacket 
-	^ receivedPackets includes: aPacket
+	^ arrivedPackets includes: aPacket
