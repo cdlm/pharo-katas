@@ -4,7 +4,7 @@
 	"instance" : {
 		"buildNetwork" : "DamienPollet 9/2/2015 15:04",
 		"setUp" : "DamienPollet 9/1/2015 15:48",
-		"testDirectSend" : "DamienPollet 9/2/2015 17:02",
+		"testDirectSend" : "DamienPollet 9/2/2015 17:24",
 		"testNetworkFindsNodesByAddress" : "DamienPollet 9/1/2015 16:17",
 		"testNetworkOnlyFindsAddedNodes" : "DamienPollet 9/1/2015 16:42",
 		"testSelfSend" : "DamienPollet 9/2/2015 17:08",
