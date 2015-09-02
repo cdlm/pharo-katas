@@ -1,0 +1,16 @@
+{
+	"category" : "Kata-NetworkSimulator-Tests",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"net",
+		"hub",
+		"alone" ],
+	"name" : "KANetworkExercisesTest",
+	"pools" : [
+		 ],
+	"super" : "TestCase",
+	"type" : "normal" }

@@ -1,0 +1,1 @@
+I represent a network. I serve mostly as a builder and accessor for the nodes and links I contain.

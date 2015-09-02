@@ -4,6 +4,8 @@
 	"instance" : {
 		"destinationAddress" : "DamienPollet 9/1/2015 14:48:45",
 		"initializeSource:destination:payload:" : "DamienPollet 9/1/2015 14:48:45",
+		"isAdressedTo:" : "DamienPollet 9/2/2015 14:16",
+		"isOriginatingFrom:" : "DamienPollet 9/2/2015 14:17",
 		"payload" : "DamienPollet 9/1/2015 14:48:45",
 		"printOn:" : "DamienPollet 9/1/2015 14:48:45",
 		"sourceAddress" : "DamienPollet 9/1/2015 14:48:45" } }
