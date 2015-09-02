@@ -1,6 +1,6 @@
 packet handling
 transmit: aPacket
-	packetsToTransmit
-		remove: aPacket
-		ifAbsent: [ self error: 'packet not found' ].
-	destination receive: aPacket from: self
+	(self isTransmitting: aPacket)
+		ifTrue: [
+			packetsToTransmit remove: aPacket.
+			destination receive: aPacket from: self ]

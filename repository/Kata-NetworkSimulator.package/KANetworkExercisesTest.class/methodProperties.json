@@ -2,8 +2,9 @@
 	"class" : {
 		 },
 	"instance" : {
-		"buildNetwork" : "DamienPollet 9/1/2015 16:03",
+		"buildNetwork" : "DamienPollet 9/2/2015 15:04",
 		"setUp" : "DamienPollet 9/1/2015 15:48",
 		"testNetworkFindsNodesByAddress" : "DamienPollet 9/1/2015 16:17",
 		"testNetworkOnlyFindsAddedNodes" : "DamienPollet 9/1/2015 16:42",
-		"testScenarioSelfSend" : "DamienPollet 9/2/2015 14:16" } }
+		"testSelfSend" : "DamienPollet 9/2/2015 14:39",
+		"testSendViaHub" : "DamienPollet 9/2/2015 15:26" } }
