@@ -33,7 +33,6 @@ TestCase subclass: #KANetworkTest
 Packets are the simplest objects in our model: we need to create them, and ask them about the data they contain, but that's about it.
 Once created, a packet will not change its data, and the packet itself has no knowledge of the network, and no behavior that we can really talk about.
 
-% |fromFile=code/Kata-NetworkSimulator.package/KANetworkTest.class/instance/testPacketCreation.st
 [[[language=smalltalk
 KANetworkTest >> testPacketCreation
 	| src dest payload packet |
@@ -62,7 +61,6 @@ KANetworkPacket >> Object subclass: #KANetworkPacket
 
 The class-side constructor method creates an instance then sends it an initialization message:
 
-% |fromFile=code/Kata-NetworkSimulator.package/KANetworkPacket.class/class/from.to.payload..st
 [[[language=smalltalk
 KANetworkPacket class >> from: sourceAddress to: destinationAddress payload: anObject
 	^ self new
@@ -71,7 +69,8 @@ KANetworkPacket class >> from: sourceAddress to: destinationAddress payload: anO
 		payload: anObject
 ]]]
 
-% |fromFile=code/Kata-NetworkSimulator.package/KANetworkPacket.class/instance/initializeSource.destination.payload..st
+The initialization method is only supposed to be called when creating packets.
+
 [[[language=smalltalk
 KANetworkPacket >> initializeSource: source destination: destination payload: anObject
 	sourceAddress := source.
@@ -79,12 +78,15 @@ KANetworkPacket >> initializeSource: source destination: destination payload: an
 	payload := anObject
 ]]]
 
+Once a packet is created, all we need to do with it is to obtain its payload, or the addresses of its source or destination nodes.
+We thus define an accessor method for each instance variable.
+
 [[[language=smalltalk
 KANetworkPacket >> sourceAddress
 	^ sourceAddress
 ]]]
 
-[[[language=smalltalk|caption=KANetworkPacket
+[[[language=smalltalk
 KANetworkPacket >> destinationAddress
 	^ destinationAddress
 ]]]
@@ -93,6 +95,8 @@ KANetworkPacket >> destinationAddress
 KANetworkPacket >> payload
 	^ payload
 ]]]
+
+
 !!! A node has an address
 
 [[[language=smalltalk
