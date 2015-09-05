@@ -1,0 +1,206 @@
+! Designing a simple network simulation platform
+
+- design from scratch
+- nodes, links
+- time simulation with ticks
+
+The goal of this document is to show how we would develop from scratch in Pharo.
+The program we are going to develop is a simple representation of a computer network.
+At first, we will just simulate the different steps of packet delivery, but eventually, our program could be refined to become an experiment platform to explore and understand distributed algorithms.
+
+!! Basic definitions and a starting point
+
+We need to establish the basic model; what does the description above tell us?
+A network is a number of interconnected nodes, which exchange data packets.
+We will therefore probably need to model the nodes, the connection links, and the packets:
+
+- Nodes have addresses, can send and receive packets;
+- Links connect two nodes together, and transmit packets between them;
+- Packets transport a payload and have the address of the node to which it should be delivered; if we want nodes to be able to answer, packets should also have the address of the node which originally sent it.
+
+Let's start exploring by sketching some simple tests; this requires defining a test class:
+
+[[[language=smalltalk
+TestCase subclass: #KANetworkTest
+    instanceVariableNames: ''
+    classVariableNames: ''
+    category: 'Kata-NetworkSimulator-Tests'
+]]]
+
+
+!!! Packets are simple value objects
+
+Packets are the simplest objects in our model: we need to create them, and ask them about the data they contain, but that's about it.
+Once created, a packet will not change its data, and the packet itself has no knowledge of the network, and no behavior that we can really talk about.
+
+% |fromFile=code/Kata-NetworkSimulator.package/KANetworkTest.class/instance/testPacketCreation.st
+[[[language=smalltalk
+KANetworkTest >> testPacketCreation
+	| src dest payload packet |
+	src := Object new.
+	dest := Object new.
+	payload := Object new.
+	
+	packet := KANetworkPacket from: src to: dest payload: payload.
+	
+	self assert: packet sourceAddress equals: src.
+	self assert: packet destinationAddress equals: dest.
+	self assert: packet payload equals: payload
+]]]
+
+In this unit test, we wrote how we think packets should be created, using a ==from:to:payload:== constructor message, and how it should be accessed, using three messages ==sourceAddress==, ==destinationAddress==, and ==payload==.
+Since we have not yet decided what addresses and payloads should look like, we just pass arbitrary objects as parameters; all that matters is that when we ask the packet, it returns the correct object back.
+
+Of course, if we now try to compile and run this test method, it will fail, because the class ==KANetworkPacket== has not been created yet, nor any of the four above messages; let's do that:
+
+[[[language=smalltalk
+KANetworkPacket >> Object subclass: #KANetworkPacket
+	instanceVariableNames: 'sourceAddress destinationAddress payload'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+The class-side constructor method creates an instance then sends it an initialization message:
+
+% |fromFile=code/Kata-NetworkSimulator.package/KANetworkPacket.class/class/from.to.payload..st
+[[[language=smalltalk
+KANetworkPacket class >> from: sourceAddress to: destinationAddress payload: anObject
+	^ self new
+		initializeSource: sourceAddress
+		destination: destinationAddress
+		payload: anObject
+]]]
+
+% |fromFile=code/Kata-NetworkSimulator.package/KANetworkPacket.class/instance/initializeSource.destination.payload..st
+[[[language=smalltalk
+KANetworkPacket >> initializeSource: source destination: destination payload: anObject
+	sourceAddress := source.
+	destinationAddress := destination.
+	payload := anObject
+]]]
+
+[[[language=smalltalk
+KANetworkPacket >> sourceAddress
+	^ sourceAddress
+]]]
+
+[[[language=smalltalk|caption=KANetworkPacket
+KANetworkPacket >> destinationAddress
+	^ destinationAddress
+]]]
+
+[[[language=smalltalk
+KANetworkPacket >> payload
+	^ payload
+]]]
+!!! A node has an address
+
+[[[language=smalltalk
+KANetworkTest >> testNodeCreation
+    | address node |
+    address := Object new.
+    node := KANetworkNode withAddress: address.
+
+    self assert: node address equals: address
+]]]
+
+[[[language=smalltalk
+Object subclass: #KANetworkNode
+    instanceVariableNames: 'address'
+    classVariableNames: ''
+    category: 'Kata-NetworkSimulator-Core'
+]]]
+
+[[[language=smalltalk
+KANetworkNode class >> withAddress: aNetworkAddress
+    ^ self new
+        initializeAddress: aNetworkAddress;
+        yourself
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> initializeAddress: aNetworkAddress
+    address := aNetworkAddress
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> address
+    ^ address
+]]]
+
+!!! Links are one-way connections between nodes
+
+[[[language=smalltalk
+KANetworkTests >> testNodeLinking
+	| node1 node2 link |
+	node1 := KANetworkNode withAddress: 1.
+	node2 := KANetworkNode withAddress: 2.
+	link := KANetworkLink new.
+	
+	link connect: node1 to: node2.
+	
+	self assert: (node1 hasLinkTo: node2)
+]]]
+
+[[[language=smalltalk
+Object subclass: #KANetworkLink
+	instanceVariableNames: 'source destination'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+[[[language=smalltalk
+KANetworkLink >> connect: sourceNode to: destinationNode
+	source := sourceNode.
+	destination := destinationNode.
+	sourceNode attach: self
+]]]
+
+[[[language=smalltalk
+KANetworkLink >> destination
+    ^ destination
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> hasLinkTo: aNetworkNode
+	^ outgoingLinks
+        anySatisfy: [ :any | any destination == aNetworkNode ]
+]]]
+
+
+!!! Nodes can emit packets
+
+[[[language=smalltalk
+KANetworkTests >> testPacketEmission
+	| src dest packet |
+	src := KANetworkNode withAddress: 1.
+	dest := KANetworkNode withAddress: 2.
+	packet := KANetworkPacket from: src to: dest payload: #payload.
+	
+	src emit: packet.
+	
+	self assert: (src emissionQueue includes: packet).
+	self assert: (dest receptionQueue includes: packet)
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> emit: aPacket
+	emissionQueue add: aPacket
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> initializeAddress: aNetworkAddress
+	outgoingLinks := Set new.
+	emissionQueue := OrderedCollection new.
+	address := aNetworkAddress
+]]]
+
+[[[language=smalltalk
+emissionQueue
+	^ emissionQueue
+]]]
+
+!!! A standalone node can transmit a packet to itself
+
+
+!! first improvement: (something)
