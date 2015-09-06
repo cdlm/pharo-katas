@@ -144,19 +144,31 @@ KANetworkNode >> address
     ^ address
 ]]]
 
+
 !!! Links are one-way connections between nodes
+
+After nodes, we should look at links.
+In the real world, a network cable is usually bidirectional, but here we're going to keep it simple and define links as simple one-way connections.
+To make a two-way connection, we will just make two links, one in each direction.
+
+Therefore, a link has a source and a destination node; additionally, to be able to send packets, nodes need to know about their outgoing links.
 
 [[[language=smalltalk
 KANetworkTests >> testNodeLinking
 	| node1 node2 link |
-	node1 := KANetworkNode withAddress: 1.
-	node2 := KANetworkNode withAddress: 2.
-	link := KANetworkLink new.
+	node1 := KANetworkNode withAddress: #address1.
+	node2 := KANetworkNode withAddress: #address2.
+	link := KANetworkLink from: node1 to: node2.
 
-	link connect: node1 to: node2.
+	link attach.
 
 	self assert: (node1 hasLinkTo: node2)
 ]]]
+
+This test creates two nodes and a link; after telling the link to ''attach'' itself,  we check that it did so: the source node should confirm that it has an outgoing link to the destination node.
+Note that the constructor could have registered the link with ==node1==, but we opted for a separate message ==attach== instead, because it's bad form to have a constructor change other objets; this way we can build links between arbitrary nodes and still have control of when the connection really becomes part of the network model.
+
+Again, we need to define class of links:
 
 [[[language=smalltalk
 Object subclass: #KANetworkLink
@@ -165,11 +177,27 @@ Object subclass: #KANetworkLink
 	category: 'Kata-NetworkSimulator-Core'
 ]]]
 
+A constructor that passes the two required parameters to an instance-side initialization message:
+
 [[[language=smalltalk
-KANetworkLink >> connect: sourceNode to: destinationNode
+KANetworkLink class >> from: sourceNode to: destinationNode
+	^ self new
+		initializeFrom: sourceNode to: destinationNode
+]]]
+
+The initialization method itself:
+
+[[[language=smalltalk
+KANetworkLink >> initializeFrom: sourceNode to: destinationNode
 	source := sourceNode.
 	destination := destinationNode.
-	sourceNode attach: self
+]]]
+
+Accessors:
+
+[[[language=smalltalk
+KANetworkLink >> source
+	^ source
 ]]]
 
 [[[language=smalltalk
@@ -177,10 +205,42 @@ KANetworkLink >> destination
     ^ destination
 ]]]
 
+The ==attach== method of a link delegates to the source node (the link knows which node has to do something, and the node knows what to do precisely):
+
+[[[language=smalltalk
+KANetworkLink >> attach
+	source attach: self
+]]]
+
+If each node knows about all its outgoing links, it means it has a collection of those; we therefore need to extend ==KANetworkNode==, first with an additional instance variable ==outgoingLinks==:
+
+[[[language=smalltalk
+Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+This variable needs to be initialized properly:
+
+[[[language=smalltalk
+KANetworkNode >> initialize
+	outgoingLinks := Set new.
+]]]
+
+We can then implement the ==attach:== method:
+
+[[[language=smalltalk
+KANetworkNode >> attach: anOutgoingLink
+	outgoingLinks add: anOutgoingLink
+]]]
+
+And finally the testing method on instances of ==KANetworkNode==:
+
 [[[language=smalltalk
 KANetworkNode >> hasLinkTo: aNetworkNode
 	^ outgoingLinks
-        anySatisfy: [ :any | any destination == aNetworkNode ]
+		anySatisfy: [ :any | any destination == aNetworkNode ]
 ]]]
 
 
