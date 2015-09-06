@@ -39,9 +39,9 @@ KANetworkTest >> testPacketCreation
 	src := Object new.
 	dest := Object new.
 	payload := Object new.
-	
+
 	packet := KANetworkPacket from: src to: dest payload: payload.
-	
+
 	self assert: packet sourceAddress equals: src.
 	self assert: packet destinationAddress equals: dest.
 	self assert: packet payload equals: payload
@@ -96,17 +96,23 @@ KANetworkPacket >> payload
 	^ payload
 ]]]
 
+That's enough for our admittedly simplistic model of packets; we completely ignore the layers of the OSI model, but it could be an interesting exercise to model that more precisely.
 
-!!! A node has an address
+
+!!! Nodes
+
+The first obvious thing we can say about a network node is that if we want to be able to send packets to it, then it should have an address; let's translate that into a test:
 
 [[[language=smalltalk
 KANetworkTest >> testNodeCreation
-    | address node |
-    address := Object new.
-    node := KANetworkNode withAddress: address.
+	| address node |
+	address := Object new.
+	node := KANetworkNode withAddress: address.
 
-    self assert: node address equals: address
+	self assert: node address equals: address
 ]]]
+
+Like before, before running this test, we have to define the ==KANetworkNode== class:
 
 [[[language=smalltalk
 Object subclass: #KANetworkNode
@@ -115,17 +121,23 @@ Object subclass: #KANetworkNode
     category: 'Kata-NetworkSimulator-Core'
 ]]]
 
+Then a class-side constructor method taking the address of the new node as parameter:
+
 [[[language=smalltalk
 KANetworkNode class >> withAddress: aNetworkAddress
-    ^ self new
-        initializeAddress: aNetworkAddress;
-        yourself
+	^ self new
+		initializeAddress: aNetworkAddress;
+		yourself
 ]]]
+
+The constructor relies on an instance-side initialization method:
 
 [[[language=smalltalk
 KANetworkNode >> initializeAddress: aNetworkAddress
-    address := aNetworkAddress
+	address := aNetworkAddress
 ]]]
+
+And we can ask a node for its address:
 
 [[[language=smalltalk
 KANetworkNode >> address
@@ -140,9 +152,9 @@ KANetworkTests >> testNodeLinking
 	node1 := KANetworkNode withAddress: 1.
 	node2 := KANetworkNode withAddress: 2.
 	link := KANetworkLink new.
-	
+
 	link connect: node1 to: node2.
-	
+
 	self assert: (node1 hasLinkTo: node2)
 ]]]
 
@@ -180,9 +192,9 @@ KANetworkTests >> testPacketEmission
 	src := KANetworkNode withAddress: 1.
 	dest := KANetworkNode withAddress: 2.
 	packet := KANetworkPacket from: src to: dest payload: #payload.
-	
+
 	src emit: packet.
-	
+
 	self assert: (src emissionQueue includes: packet).
 	self assert: (dest receptionQueue includes: packet)
 ]]]
