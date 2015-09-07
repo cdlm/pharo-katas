@@ -1,5 +1,4 @@
-topology
-initializeFrom: sourceNode to: destinationNode 
+initialization
+initializeFrom: sourceNode to: destinationNode
 	source := sourceNode.
-	destination := destinationNode.
-	packetsToTransmit := OrderedCollection new
+	destination := destinationNode
