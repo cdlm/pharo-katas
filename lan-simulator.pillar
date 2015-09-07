@@ -246,37 +246,115 @@ KANetworkNode >> hasLinkTo: aNetworkNode
 
 !!! Nodes can emit packets
 
-The next big feature is that nodes should be able to emit packets.
+The next big feature is that nodes should be able to send and receive packets, and links to transmit them.
 
 [[[language=smalltalk
-KANetworkTests >> testPacketEmission
-	| src dest packet |
-	src := KANetworkNode withAddress: 1.
-	dest := KANetworkNode withAddress: 2.
-	packet := KANetworkPacket from: src to: dest payload: #payload.
+KANetworkTests >> testSendAndTransmit
+	| srcNode destNode link packet |
+	srcNode := KANetworkNode withAddress: #src.
+	destNode := KANetworkNode withAddress: #dest.
+	link := (KANetworkLink from: srcNode to: destNode) attach; yourself.
+	packet := KANetworkPacket from: #address to: #dest payload: #payload.
 
-	src emit: packet.
+	srcNode send: packet via: link.
+	self assert: (link isTransmitting: packet).
+	self deny: (destNode hasReceived: packet).
 
-	self assert: (src emissionQueue includes: packet).
-	self assert: (dest receptionQueue includes: packet)
+	link transmit: packet.
+	self deny: (link isTransmitting: packet).
+	self assert: (destNode hasReceived: packet)
+]]]
+
+We create and setup two nodes, a link between them, and a packet.
+Now, to control which packets get delivered in which order, we specify that it happens in separate, controlled steps.
+This will allow us to model packet delivery precisely, to simulate latency, out-of-order reception, etc.:
+
+- First, we tell the node to send the packet using ==send:via:==. At that point the packet should be passed to the link for transmission, but not completely delivered yet.
+- Then, we tell the link to actually pass the packet along using ==transmit:==, and thus the packet should be received by the destination node.
+
+!!!! Sending
+
+To send a packet, the node emits it on the link:
+
+[[[language=smalltalk
+KANetworkNode >> send: aPacket via: aLink
+	aLink emit: aPacket
+]]]
+
+Since the packet will not be delivered right away, emitting a packet really just stores it in the link, until the user elects this packet to proceed using the ==transmit:== message.
+Storing packets requires adding an instance variable to ==KANetworkLink==, as well as specifying how this instance variable should be initialized.
+
+[[[language=smalltalk
+Object subclass: #KANetworkLink
+	instanceVariableNames: 'source destination packetsToTransmit'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
 ]]]
 
 [[[language=smalltalk
-KANetworkNode >> emit: aPacket
-	emissionQueue add: aPacket
+initialize
+	packetsToTransmit := OrderedCollection new
 ]]]
 
 [[[language=smalltalk
-KANetworkNode >> initializeAddress: aNetworkAddress
+KANetworkLink >> emit: aPacket
+	packetsToTransmit add: aPacket
+]]]
+
+We also add a testing method to check whether a given packet is currently being transmitted by a link:
+
+[[[language=smalltalk
+KANetworkLink >> isTransmitting: aPacket
+	^ packetsToTransmit includes: aPacket
+]]]
+
+!!!! Transmitting
+
+Transmitting a packet means passing it to the destination node, which will receive it.
+A link can not transmit packets that have not been sent via it, and once transmitted, the packet leaves the link:
+
+[[[language=smalltalk
+KANetworkLink >> transmit: aPacket
+	(self isTransmitting: aPacket)
+		ifTrue: [
+			packetsToTransmit remove: aPacket.
+			destination receive: aPacket from: self ]
+]]]
+
+Nodes only consume packets addressed to them; this is what will happen in our test, so we can worry about the alternative case later.
+
+[[[language=smalltalk
+KANetworkNode >> receive: aPacket from: aLink
+	aPacket destinationAddress = address
+		ifTrue: [ self consume: aPacket ]
+		ifFalse: [ self notYetImplemented ]
+]]]
+
+Consuming a packet represents what the node will do with it; for general simulations, we only need to remember which packets did arrive:
+
+[[[language=smalltalk
+Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks arrivedPackets'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+[[[language=smalltalk
+KANetworkNode >> initialize
 	outgoingLinks := Set new.
-	emissionQueue := OrderedCollection new.
-	address := aNetworkAddress
+	arrivedPackets := OrderedCollection new
 ]]]
 
 [[[language=smalltalk
-emissionQueue
-	^ emissionQueue
+KANetworkNode >> consume: aPacket
+	arrivedPackets add: aPacket
 ]]]
+
+[[[language=smalltalk
+KANetworkNode >> hasReceived: aPacket
+	^ arrivedPackets includes: aPacket
+]]]
+
 
 !!! A standalone node can transmit a packet to itself
 
