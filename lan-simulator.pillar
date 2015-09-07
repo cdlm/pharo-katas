@@ -246,6 +246,8 @@ KANetworkNode >> hasLinkTo: aNetworkNode
 
 !!! Nodes can emit packets
 
+The next big feature is that nodes should be able to emit packets.
+
 [[[language=smalltalk
 KANetworkTests >> testPacketEmission
 	| src dest packet |
