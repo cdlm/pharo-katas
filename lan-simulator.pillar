@@ -358,5 +358,69 @@ KANetworkNode >> hasReceived: aPacket
 
 !!! A standalone node can transmit a packet to itself
 
+If a node wants to send a packet to itself, it does not need any connection to do so.
+In real-world networking stacks, loopback routing shortcuts the lower networking layers; however, this is finer detail than we are modeling here.
+Still, we want to model the fact that the loopback link is a little special, so each node will store its own loopback link, separately from the outgoing links.
 
-!! first improvement: (something)
+[[[language=smalltalk
+KANetworkTest >> testLoopback
+	| node packet |
+	node := KANetworkNode withAddress: #address.
+	packet := KANetworkPacket from: #address to: #address payload: #payload.
+	
+	node send: packet.
+	node loopback transmit: packet.
+	
+	self assert: (node hasReceived: packet).
+	self deny: (node loopback isTransmitting: packet) 
+]]]
+
+The loopback link is implicitely created as part of the node itself.
+We also introduce a new ==send:== message, which takes the responsibility of selecting the link to emit the packet.
+For triggering packet transmission, we have to use a specific accessor to find the loopback link of the node.
+
+First, we have to add yet another instance variable in nodes:
+
+[[[language=smalltalk
+Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks loopback arrivedPackets'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+As with all instance variables, we have to remember to make sure it is correctly initialized; we thus modify ==initialize==:
+
+[[[language=smalltalk
+KANetworkNode >> initialize
+	loopback := KANetworkLink from: self to: self.
+	outgoingLinks := Set new.
+	arrivedPackets := OrderedCollection new
+]]]
+
+The accessor has nothing special:
+
+[[[language=smalltalk
+KANetworkNode >> loopback
+	^ loopback
+]]]
+
+And finally we can focus on the ==send:== method and automatic link selection.
+This method has to rely on some routing algorithm to identify which links will transmit the packet closer to its destination.
+Since some routing algorithms select more than one link, we will implement routing as an ''iteration'' method, which evaluates the given block for each selected link.
+
+[[[language=smalltalk
+KANetworkNode >> send: aPacket
+	self
+		linksTowards: aPacket destinationAddress
+		do: [ :link | self send: aPacket via: link ]
+]]]
+
+One of the simplest routing algorithm is flooding: just send the packet via every link; this is obviously a waste of bandwidth, but it works.
+We can however make a special case for loopback, when the destination address is the one of the current node:
+
+[[[language=smalltalk
+linksTowards: anAddress do: aBlock
+	anAddress = address
+		ifTrue: [ aBlock value: self loopback ]
+		ifFalse: [ outgoingLinks do: aBlock ]
+]]]
