@@ -154,7 +154,7 @@ To make a two-way connection, we will just make two links, one in each direction
 Therefore, a link has a source and a destination node; additionally, to be able to send packets, nodes need to know about their outgoing links.
 
 [[[language=smalltalk
-KANetworkTests >> testNodeLinking
+KANetworkTest >> testNodeLinking
 	| node1 node2 link |
 	node1 := KANetworkNode withAddress: #address1.
 	node2 := KANetworkNode withAddress: #address2.
@@ -249,7 +249,7 @@ KANetworkNode >> hasLinkTo: aNetworkNode
 The next big feature is that nodes should be able to send and receive packets, and links to transmit them.
 
 [[[language=smalltalk
-KANetworkTests >> testSendAndTransmit
+KANetworkTest >> testSendAndTransmit
 	| srcNode destNode link packet |
 	srcNode := KANetworkNode withAddress: #src.
 	destNode := KANetworkNode withAddress: #dest.
@@ -292,7 +292,7 @@ Object subclass: #KANetworkLink
 ]]]
 
 [[[language=smalltalk
-initialize
+KANetworkLink >> initialize
 	packetsToTransmit := OrderedCollection new
 ]]]
 
