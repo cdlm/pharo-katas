@@ -419,7 +419,7 @@ One of the simplest routing algorithm is flooding: just send the packet via ever
 We can however make a special case for loopback, when the destination address is the one of the current node:
 
 [[[language=smalltalk
-linksTowards: anAddress do: aBlock
+KANetworkNode >> linksTowards: anAddress do: aBlock
 	anAddress = address
 		ifTrue: [ aBlock value: self loopback ]
 		ifFalse: [ outgoingLinks do: aBlock ]
