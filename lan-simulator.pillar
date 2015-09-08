@@ -424,3 +424,144 @@ KANetworkNode >> linksTowards: anAddress do: aBlock
 		ifTrue: [ aBlock value: self loopback ]
 		ifFalse: [ outgoingLinks do: aBlock ]
 ]]]
+
+Now we have the basic model working, and we can try more realistic examples.
+
+
+!! Bigger tests and examples
+
+We will now write some more tests on a non-trivial network.
+The following tests will use a network consisting of some nodes connected in a star pattern around a central hub node.
+We will introduce a new class ==KANetwork==, whose responsibility is to represent the network itself, and provide messages to concisely describe and access a network, instead of keeping many objects in individual variables.
+
+Let's start by creating another test class, to keep things in order:
+
+[[[language=smalltalk
+TestCase subclass: #KANetworkExercisesTest
+	instanceVariableNames: 'net hub alone'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Tests'
+]]]
+
+Since every test needs to rebuild the whole network from scratch, we specify so in the ==setUp== method:
+[[[language=smalltalk
+setUp
+	self buildNetwork
+]]]
+
+Before anything else, let's write a tests that will pass once we've made progress; we want to access network nodes given only their addresses:
+
+[[[language=smalltalk
+KANetworkExercisesTest >> testNetworkFindsNodesByAddress
+	self
+		assert: (net nodeAt: hub address ifNone: [ self fail ])
+		equals: hub
+]]]
+
+We will have to implement this ==nodeAt:ifNone:== on our ==KANetwork== class; but first we need to decide how its instances are built:
+
+[[[language=smalltalk
+buildNetwork
+	alone := KANetworkNode withAddress: #alone.
+
+	net := KANetwork new.
+
+	hub := KANetworkNode withAddress: #hub.
+	#(mac pc1 pc2 prn) do: [ :addr |
+		| node |
+		node := KANetworkNode withAddress: addr.
+		net connect: node to: hub ].
+
+	net
+		connect: (KANetworkNode withAddress: #ping)
+		to: (KANetworkNode withAddress: #pong)
+]]]
+
+This method builds nodes as before, but sends ==connect:to:== to the ==net== object instead of creating links explicitly; this is how we tell the network which nodes and links it should remember.
+
+[[[language=smalltalk
+Object subclass: #KANetwork
+	instanceVariableNames: 'nodes links'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'
+]]]
+
+Let's not forget about proper initialization:
+
+[[[language=smalltalk
+KANetwork >> initialize
+	nodes := Set new.
+	links := Set new
+]]]
+
+Connecting nodes means creating the links in both directions, then adding both nodes and both links in their corresponding collections:
+
+[[[language=smalltalk
+KANetwork >> connect: aNode to: anotherNode
+	self add: aNode.
+	self add: anotherNode.
+	links add: (self makeLinkFrom: aNode to: anotherNode) attach.
+	links add: (self makeLinkFrom: anotherNode to: aNode) attach
+]]]
+
+[[[language=smalltalk
+KANetwork >> add: aNode
+	nodes add: aNode
+]]]
+
+[[[language=smalltalk
+KANetwork >> makeLinkFrom: aNode to: anotherNode
+	^ KANetworkLink from: aNode to: anotherNode
+]]]
+
+And we can implement node lookup:
+
+[[[language=smalltalk
+KANetwork >> nodeAt: anAddress ifNone: noneBlock
+	^ nodes
+		detect: [ :any | any address = anAddress ]
+		ifNone: noneBlock
+]]]
+
+We can make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node:
+
+[[[language=smalltalk
+KANetworkExercisesTest >> testNetworkOnlyFindsAddedNodes
+	self
+		should: [ net nodeAt: alone address ]
+		raise: NotFound
+]]]
+
+[[[language=smalltalk
+KANetwork >> nodeAt: anAddress
+	^ self
+		nodeAt: anAddress
+		ifNone: [ NotFound signalFor: anAddress in: self ]
+]]]
+
+And finally, we want to be able to lookup links between two nodes:
+
+[[[language=smalltalk
+KANetworkExercisesTest >> testNetworkFindsLinks
+	| link |
+	self
+		shouldnt: [ link := net linkFrom: #pong to: #ping ]
+		raise: NotFound.
+	self
+		assert: link source
+		equals: (net nodeAt: #pong).
+	self
+		assert: link destination
+		equals: (net nodeAt: #ping)
+	
+]]]
+
+[[[language=smalltalk
+KANetwork >> linkFrom: sourceAddress to: destinationAddress
+	^ links
+		detect: [ :anyLink |
+			anyLink source address = sourceAddress
+				and: [ anyLink destination address = destinationAddress ] ]
+		ifNone: [ NotFound signalFor: sourceAddress -> destinationAddress in: self ]
+		
+]]]
