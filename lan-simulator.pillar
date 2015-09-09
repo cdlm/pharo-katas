@@ -430,6 +430,8 @@ Now we have the basic model working, and we can try more realistic examples.
 
 !! Bigger tests and examples
 
+!!! A star-shaped network
+
 We will now write some more tests on a non-trivial network.
 The following tests will use a network consisting of some nodes connected in a star pattern around a central hub node.
 We will introduce a new class ==KANetwork==, whose responsibility is to represent the network itself, and provide messages to concisely describe and access a network, instead of keeping many objects in individual variables.
@@ -563,3 +565,13 @@ KANetwork >> linkFrom: sourceAddress to: destinationAddress
 				and: [ anyLink destination address = destinationAddress ] ]
 		ifNone: [ NotFound signalFor: sourceAddress -> destinationAddress in: self ]
 ]]]
+
+
+!!! Differenciating hubs from normal nodes
+
+
+!!! Specializing other nodes
+
+
+!!! Cycles and routing tables
+
