@@ -563,7 +563,10 @@ KANetwork >> linkFrom: sourceAddress to: destinationAddress
 		detect: [ :anyLink |
 			anyLink source address = sourceAddress
 				and: [ anyLink destination address = destinationAddress ] ]
-		ifNone: [ NotFound signalFor: sourceAddress -> destinationAddress in: self ]
+		ifNone: [
+            NotFound
+                signalFor: sourceAddress -> destinationAddress
+                in: self ]
 ]]]
 
 
