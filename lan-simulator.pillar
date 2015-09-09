@@ -553,7 +553,6 @@ KANetworkExercisesTest >> testNetworkFindsLinks
 	self
 		assert: link destination
 		equals: (net nodeAt: #ping)
-	
 ]]]
 
 [[[language=smalltalk
@@ -563,5 +562,4 @@ KANetwork >> linkFrom: sourceAddress to: destinationAddress
 			anyLink source address = sourceAddress
 				and: [ anyLink destination address = destinationAddress ] ]
 		ifNone: [ NotFound signalFor: sourceAddress -> destinationAddress in: self ]
-		
 ]]]
