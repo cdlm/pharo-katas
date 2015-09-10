@@ -1,12 +1,13 @@
 ! Designing a simple network simulation platform
 
-- design from scratch
-- nodes, links
-- time simulation with ticks
+This document will show how we develop a simulator for a computer network, from scratch, and step by step.
+The program we are going to develop is a simple representation of a computer network: it consists of objects that represent different parts of a local network such as packets, nodes, workstations, routers and hubs. 
 
-The goal of this document is to show how we would develop from scratch in Pharo.
-The program we are going to develop is a simple representation of a computer network.
-At first, we will just simulate the different steps of packet delivery, but eventually, our program could be refined to become an experiment platform to explore and understand distributed algorithms.
+At first, we will just simulate the different steps of packet delivery and have fun with the system.
+In a second step we will extend the basic functionalities by adding extensions such as a hub and different packet routing strategies.
+Doing so, we will revisit many object-oriented concepts such as polymorphism, encapsulation, hooks and templates.
+Finally this system could be refined to become an experiment platform to explore and understand distributed algorithms.
+
 
 !! Basic definitions and a starting point
 
