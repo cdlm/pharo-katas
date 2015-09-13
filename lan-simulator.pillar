@@ -429,13 +429,11 @@ KANetworkNode >> linksTowards: anAddress do: aBlock
 Now we have the basic model working, and we can try more realistic examples.
 
 
-!! Bigger tests and examples
+!! Modeling the network itself
 
-!!! A star-shaped network
-
-We will now write some more tests on a non-trivial network.
-The following tests will use a network consisting of some nodes connected in a star pattern around a central hub node.
-We will introduce a new class ==KANetwork==, whose responsibility is to represent the network itself, and provide messages to concisely describe and access a network, instead of keeping many objects in individual variables.
+More realistic tests will require non-trivial networks.
+We thus need an object that represents the network as a whole, to avoid keeping many nodes and links in individual variables.
+We will introduce a new class ==KANetwork==, whose responsibility is to help us build assemble then find the nodes and links involved in a network.
 
 Let's start by creating another test class, to keep things in order:
 
@@ -447,6 +445,7 @@ TestCase subclass: #KANetworkExercisesTest
 ]]]
 
 Since every test needs to rebuild the whole network from scratch, we specify so in the ==setUp== method:
+
 [[[language=smalltalk
 setUp
 	self buildNetwork
@@ -461,7 +460,8 @@ KANetworkExercisesTest >> testNetworkFindsNodesByAddress
 		equals: hub
 ]]]
 
-We will have to implement this ==nodeAt:ifNone:== on our ==KANetwork== class; but first we need to decide how its instances are built:
+We will have to implement this ==nodeAt:ifNone:== on our ==KANetwork== class; but first we need to decide how its instances are built.
+Let's build network ==net==, with the main part connected in a star shape around a ==hub== node; a pair of nodes ==ping== and ==pong== are part of the network but not connected to ==hub==, and the ==alone== node is just by itself, not even added to the network:
 
 [[[language=smalltalk
 buildNetwork
@@ -517,7 +517,7 @@ KANetwork >> makeLinkFrom: aNode to: anotherNode
 	^ KANetworkLink from: aNode to: anotherNode
 ]]]
 
-And we can implement node lookup:
+Now we can implement node lookup:
 
 [[[language=smalltalk
 KANetwork >> nodeAt: anAddress ifNone: noneBlock
@@ -526,7 +526,7 @@ KANetwork >> nodeAt: anAddress ifNone: noneBlock
 		ifNone: noneBlock
 ]]]
 
-We can make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node:
+We can also make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node:
 
 [[[language=smalltalk
 KANetworkExercisesTest >> testNetworkOnlyFindsAddedNodes
@@ -570,6 +570,13 @@ KANetwork >> linkFrom: sourceAddress to: destinationAddress
                 in: self ]
 ]]]
 
+As a final check, let's reproduce some of our previous tests in the network we just built.
+
+
+!! Packet delivery in a more realistic network
+
+Given the star network that we just defined, let's look at a few scenarios.
+Until now, we only tested packet delivery between directly connected nodes; let's try sending a node so that the packet has to be forwarded through the hub.
 
 !!! Differenciating hubs from normal nodes
 
