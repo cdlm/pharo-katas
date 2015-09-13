@@ -1,7 +1,7 @@
 ! Designing a simple network simulation platform
 
 This document will show how we develop a simulator for a computer network, from scratch, and step by step.
-The program we are going to develop is a simple representation of a computer network: it consists of objects that represent different parts of a local network such as packets, nodes, workstations, routers and hubs. 
+The program we are going to develop is a simple representation of a computer network: it consists of objects that represent different parts of a local network such as packets, nodes, workstations, routers and hubs.
 
 At first, we will just simulate the different steps of packet delivery and have fun with the system.
 In a second step we will extend the basic functionalities by adding extensions such as a hub and different packet routing strategies.
@@ -25,10 +25,11 @@ Let's start exploring by sketching some simple tests; this requires defining a t
 TestCase subclass: #KANetworkEntitiesTest
     instanceVariableNames: ''
     classVariableNames: ''
-    category: 'Kata-NetworkSimulator-Tests'
+    category: 'NetworkSimulator-Tests'
 ]]]
 
-Since we will create several classes, we used the following notation to refer to the classes in which a method should be defined. ==KANetworkEntitiesTest >> testPacketCreation== means that the method ==testPacketCreation== is defined in the class ==KANetworkEntitiesTest==.
+Since we will create several classes, we used the following notation to refer to the classes in which a method should be defined.
+==KANetworkEntitiesTest >> testPacketCreation== means that the method ==testPacketCreation== is defined in the class ==KANetworkEntitiesTest==.
 
 
 !!! Packets are simple value objects
@@ -53,10 +54,11 @@ KANetworkEntitiesTest >> testPacketCreation
 In this unit test, we wrote how we think packets should be created, using a ==from:to:payload:== constructor message, and how it should be accessed, using three messages ==sourceAddress==, ==destinationAddress==, and ==payload==.
 Since we have not yet decided what addresses and payloads should look like, we just pass arbitrary objects as parameters; all that matters is that when we ask the packet, it returns the correct object back.
 
-Of course, if we now try to compile and run this test method, it will fail, because the class ==KANetworkPacket== has not been created yet, nor any of the four above messages; let's do that:
+Of course, if we now compile and run this test method, it will fail, because the class ==KANetworkPacket== has not been created yet, nor any of the four above messages.
+You can either execute and let the system prompt you when needed or we can define the class:
 
 [[[language=smalltalk
-KANetworkPacket >> Object subclass: #KANetworkPacket
+Object subclass: #KANetworkPacket
 	instanceVariableNames: 'sourceAddress destinationAddress payload'
 	classVariableNames: ''
 	category: 'Kata-NetworkSimulator-Core'
@@ -99,6 +101,7 @@ KANetworkPacket >> payload
 	^ payload
 ]]]
 
+Now our test should be running and passing.
 That's enough for our admittedly simplistic model of packets; we completely ignore the layers of the OSI model, but it could be an interesting exercise to model that more precisely.
 
 
@@ -121,7 +124,7 @@ Like before, before running this test, we have to define the ==KANetworkNode== c
 Object subclass: #KANetworkNode
     instanceVariableNames: 'address'
     classVariableNames: ''
-    category: 'Kata-NetworkSimulator-Core'
+    category: 'NetworkSimulator-Core'
 ]]]
 
 Then a class-side constructor method taking the address of the new node as parameter:
@@ -147,10 +150,12 @@ KANetworkNode >> address
     ^ address
 ]]]
 
+Again our simplistic tests should now pass.
+
 
 !!! Links are one-way connections between nodes
 
-After nodes, we should look at links.
+After nodes and packets, we should look at links.
 In the real world, a network cable is usually bidirectional, but here we're going to keep it simple and define links as simple one-way connections.
 To make a two-way connection, we will just make two links, one in each direction.
 
@@ -177,7 +182,7 @@ Again, we need to define class of links:
 Object subclass: #KANetworkLink
 	instanceVariableNames: 'source destination'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+	category: 'NetworkSimulator-Core'
 ]]]
 
 A constructor that passes the two required parameters to an instance-side initialization message:
@@ -221,7 +226,7 @@ If each node knows about all its outgoing links, it means it has a collection of
 Object subclass: #KANetworkNode
 	instanceVariableNames: 'address outgoingLinks'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+	category: 'NetworkSimulator-Core'
 ]]]
 
 This variable needs to be initialized properly:
@@ -245,6 +250,8 @@ KANetworkNode >> hasLinkTo: aNetworkNode
 	^ outgoingLinks
 		anySatisfy: [ :any | any destination == aNetworkNode ]
 ]]]
+
+Again, all the tests should now pass.
 
 
 !!! Nodes can emit packets
@@ -291,7 +298,7 @@ Storing packets requires adding an instance variable to ==KANetworkLink==, as we
 Object subclass: #KANetworkLink
 	instanceVariableNames: 'source destination packetsToTransmit'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+	category: 'NetworkSimulator-Core'
 ]]]
 
 [[[language=smalltalk
@@ -301,7 +308,8 @@ KANetworkLink >> initialize
 
 [[[language=smalltalk
 KANetworkLink >> emit: aPacket
-	packetsToTransmit add: aPacket
+    "Since packet are not emitted right away, store it in the packets to trasmit"
+    packetsToTransmit add: aPacket
 ]]]
 
 We also add a testing method to check whether a given packet is currently being transmitted by a link:
@@ -318,13 +326,14 @@ A link can not transmit packets that have not been sent via it, and once transmi
 
 [[[language=smalltalk
 KANetworkLink >> transmit: aPacket
+	"Transmit the receiver to the destination of the receiver."
 	(self isTransmitting: aPacket)
 		ifTrue: [
 			packetsToTransmit remove: aPacket.
 			destination receive: aPacket from: self ]
 ]]]
 
-Nodes only consume packets addressed to them; this is what will happen in our test, so we can worry about the alternative case later.
+Nodes only consume packets addressed to them; this is what will happen in our test, so we can worry about the alternative case later (==notYetImplemented== is a special message that we can use in place of code that we will have to write eventually, but prefer to ignore for the time being).
 
 [[[language=smalltalk
 KANetworkNode >> receive: aPacket from: aLink
@@ -348,6 +357,8 @@ KANetworkNode >> initialize
 	arrivedPackets := OrderedCollection new
 ]]]
 
+We define a simple ==consume:== method: it simply adds the packet to a list of arrived packets.
+
 [[[language=smalltalk
 KANetworkNode >> consume: aPacket
 	arrivedPackets add: aPacket
@@ -357,6 +368,9 @@ KANetworkNode >> consume: aPacket
 KANetworkNode >> hasReceived: aPacket
 	^ arrivedPackets includes: aPacket
 ]]]
+
+At that point all our tests should pass.
+Note that the message ==notYetImplemented== is not called, since our tests do not require routing.
 
 
 !!! A standalone node can transmit a packet to itself
@@ -588,6 +602,7 @@ As a final check, let's reproduce some of our previous tests in the network we j
 
 Given the star network that we just defined, let's look at a few scenarios.
 Until now, we only tested packet delivery between directly connected nodes; let's try sending a node so that the packet has to be forwarded through the hub.
+
 
 !!! Differenciating hubs from normal nodes
 
