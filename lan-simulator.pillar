@@ -22,11 +22,13 @@ We will therefore probably need to model the nodes, the connection links, and th
 Let's start exploring by sketching some simple tests; this requires defining a test class:
 
 [[[language=smalltalk
-TestCase subclass: #KANetworkTest
+TestCase subclass: #KANetworkEntitiesTest
     instanceVariableNames: ''
     classVariableNames: ''
     category: 'Kata-NetworkSimulator-Tests'
 ]]]
+
+Since we will create several classes, we used the following notation to refer to the classes in which a method should be defined. ==KANetworkEntitiesTest >> testPacketCreation== means that the method ==testPacketCreation== is defined in the class ==KANetworkEntitiesTest==.
 
 
 !!! Packets are simple value objects
@@ -35,7 +37,7 @@ Packets are the simplest objects in our model: we need to create them, and ask t
 Once created, a packet will not change its data, and the packet itself has no knowledge of the network, and no behavior that we can really talk about.
 
 [[[language=smalltalk
-KANetworkTest >> testPacketCreation
+KANetworkEntitiesTest >> testPacketCreation
 	| src dest payload packet |
 	src := Object new.
 	dest := Object new.
@@ -105,7 +107,7 @@ That's enough for our admittedly simplistic model of packets; we completely igno
 The first obvious thing we can say about a network node is that if we want to be able to send packets to it, then it should have an address; let's translate that into a test:
 
 [[[language=smalltalk
-KANetworkTest >> testNodeCreation
+KANetworkEntitiesTest >> testNodeCreation
 	| address node |
 	address := Object new.
 	node := KANetworkNode withAddress: address.
@@ -155,7 +157,7 @@ To make a two-way connection, we will just make two links, one in each direction
 Therefore, a link has a source and a destination node; additionally, to be able to send packets, nodes need to know about their outgoing links.
 
 [[[language=smalltalk
-KANetworkTest >> testNodeLinking
+KANetworkEntitiesTest >> testNodeLinking
 	| node1 node2 link |
 	node1 := KANetworkNode withAddress: #address1.
 	node2 := KANetworkNode withAddress: #address2.
@@ -250,7 +252,7 @@ KANetworkNode >> hasLinkTo: aNetworkNode
 The next big feature is that nodes should be able to send and receive packets, and links to transmit them.
 
 [[[language=smalltalk
-KANetworkTest >> testSendAndTransmit
+KANetworkEntitiesTest >> testSendAndTransmit
 	| srcNode destNode link packet |
 	srcNode := KANetworkNode withAddress: #src.
 	destNode := KANetworkNode withAddress: #dest.
@@ -364,7 +366,7 @@ In real-world networking stacks, loopback routing shortcuts the lower networking
 Still, we want to model the fact that the loopback link is a little special, so each node will store its own loopback link, separately from the outgoing links.
 
 [[[language=smalltalk
-KANetworkTest >> testLoopback
+KANetworkEntitiesTest >> testLoopback
 	| node packet |
 	node := KANetworkNode withAddress: #address.
 	packet := KANetworkPacket from: #address to: #address payload: #payload.
@@ -386,7 +388,7 @@ First, we have to add yet another instance variable in nodes:
 Object subclass: #KANetworkNode
 	instanceVariableNames: 'address outgoingLinks loopback arrivedPackets'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+	category: 'NetworkSimulator-Core'
 ]]]
 
 As with all instance variables, we have to remember to make sure it is correctly initialized; we thus modify ==initialize==:
@@ -411,16 +413,18 @@ Since some routing algorithms select more than one link, we will implement routi
 
 [[[language=smalltalk
 KANetworkNode >> send: aPacket
+	"When we send a packet, let a chance to implement some routing algorithm."
 	self
 		linksTowards: aPacket destinationAddress
 		do: [ :link | self send: aPacket via: link ]
 ]]]
 
 One of the simplest routing algorithm is flooding: just send the packet via every link; this is obviously a waste of bandwidth, but it works.
-We can however make a special case for loopback, when the destination address is the one of the current node:
+We can however make a special case for loopback, when the destination address is the one of the current node. When the address of a packet is the address
 
 [[[language=smalltalk
 KANetworkNode >> linksTowards: anAddress do: aBlock
+	"By default implement a simple algorithm: when the packet is sent to the receiver, use the loopback link, else iterate on all the outgoing nodes."
 	anAddress = address
 		ifTrue: [ aBlock value: self loopback ]
 		ifFalse: [ outgoingLinks do: aBlock ]
@@ -433,28 +437,28 @@ Now we have the basic model working, and we can try more realistic examples.
 
 More realistic tests will require non-trivial networks.
 We thus need an object that represents the network as a whole, to avoid keeping many nodes and links in individual variables.
-We will introduce a new class ==KANetwork==, whose responsibility is to help us build assemble then find the nodes and links involved in a network.
+We will introduce a new class ==KANetwork==, whose responsibility is to help us build, assemble then find the nodes and links involved in a network.
 
 Let's start by creating another test class, to keep things in order:
 
 [[[language=smalltalk
-TestCase subclass: #KANetworkExercisesTest
+TestCase subclass: #KANetworkTest
 	instanceVariableNames: 'net hub alone'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Tests'
+	category: 'NetworkSimulator-Tests'
 ]]]
 
 Since every test needs to rebuild the whole network from scratch, we specify so in the ==setUp== method:
 
 [[[language=smalltalk
-setUp
+KANetworkTest >> setUp
 	self buildNetwork
 ]]]
 
-Before anything else, let's write a tests that will pass once we've made progress; we want to access network nodes given only their addresses:
+Before anything else, let's write a tests that will pass once we've made progress; we want to access network nodes given only their addresses. Here we check that we get a hub node based on its address: 
 
 [[[language=smalltalk
-KANetworkExercisesTest >> testNetworkFindsNodesByAddress
+KANetworkTest >> testNetworkFindsNodesByAddress
 	self
 		assert: (net nodeAt: hub address ifNone: [ self fail ])
 		equals: hub
@@ -464,7 +468,7 @@ We will have to implement this ==nodeAt:ifNone:== on our ==KANetwork== class; bu
 Let's build network ==net==, with the main part connected in a star shape around a ==hub== node; a pair of nodes ==ping== and ==pong== are part of the network but not connected to ==hub==, and the ==alone== node is just by itself, not even added to the network:
 
 [[[language=smalltalk
-buildNetwork
+KANetworkTest >> buildNetwork
 	alone := KANetworkNode withAddress: #alone.
 
 	net := KANetwork new.
@@ -507,6 +511,8 @@ KANetwork >> connect: aNode to: anotherNode
 	links add: (self makeLinkFrom: anotherNode to: aNode) attach
 ]]]
 
+Note that the ==attach== we define previously effectively return the link.
+
 [[[language=smalltalk
 KANetwork >> add: aNode
 	nodes add: aNode
@@ -526,14 +532,17 @@ KANetwork >> nodeAt: anAddress ifNone: noneBlock
 		ifNone: noneBlock
 ]]]
 
-We can also make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node:
+We can also make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node.
+Let us write a test verifying such behavior first.
 
 [[[language=smalltalk
-KANetworkExercisesTest >> testNetworkOnlyFindsAddedNodes
+KANetworkTest >> testNetworkOnlyFindsAddedNodes
 	self
 		should: [ net nodeAt: alone address ]
 		raise: NotFound
 ]]]
+
+Then we can simply express the ==nodeAt:== using the predefined Pharo exception ==NotFound==.
 
 [[[language=smalltalk
 KANetwork >> nodeAt: anAddress
@@ -542,10 +551,10 @@ KANetwork >> nodeAt: anAddress
 		ifNone: [ NotFound signalFor: anAddress in: self ]
 ]]]
 
-And finally, we want to be able to lookup links between two nodes:
+And finally, we want to be able to lookup links between two nodes. Again we define a new test.
 
 [[[language=smalltalk
-KANetworkExercisesTest >> testNetworkFindsLinks
+KANetworkTest >> testNetworkFindsLinks
 	| link |
 	self
 		shouldnt: [ link := net linkFrom: #pong to: #ping ]
@@ -557,6 +566,8 @@ KANetworkExercisesTest >> testNetworkFindsLinks
 		assert: link destination
 		equals: (net nodeAt: #ping)
 ]]]
+
+And we define the method ==linkFrom:to:== identifying a link between a source and destination address 
 
 [[[language=smalltalk
 KANetwork >> linkFrom: sourceAddress to: destinationAddress
