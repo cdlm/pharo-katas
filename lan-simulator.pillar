@@ -498,13 +498,15 @@ KANetworkTest >> buildNetwork
 		to: (KANetworkNode withAddress: #pong)
 ]]]
 
+!!!! The network class
+
 This method builds nodes as before, but sends ==connect:to:== to the ==net== object instead of creating links explicitly; this is how we tell the network which nodes and links it should remember.
 
 [[[language=smalltalk
 Object subclass: #KANetwork
 	instanceVariableNames: 'nodes links'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+	category: 'NetworkSimulator-Core'
 ]]]
 
 Let's not forget about proper initialization:
@@ -525,7 +527,7 @@ KANetwork >> connect: aNode to: anotherNode
 	links add: (self makeLinkFrom: anotherNode to: aNode) attach
 ]]]
 
-Note that the ==attach== we define previously effectively return the link.
+Note that the ==attach== method we defined previously effectively returns the link.
 
 [[[language=smalltalk
 KANetwork >> add: aNode
@@ -537,6 +539,8 @@ KANetwork >> makeLinkFrom: aNode to: anotherNode
 	^ KANetworkLink from: aNode to: anotherNode
 ]]]
 
+!!!! Looking up nodes
+
 Now we can implement node lookup:
 
 [[[language=smalltalk
@@ -547,7 +551,7 @@ KANetwork >> nodeAt: anAddress ifNone: noneBlock
 ]]]
 
 We can also make a convenience ==nodeAt:== method for node lookup, that will raise an exception if it does not find the node.
-Let us write a test verifying such behavior first.
+Let's first write a test which validates this behavior:
 
 [[[language=smalltalk
 KANetworkTest >> testNetworkOnlyFindsAddedNodes
@@ -556,7 +560,7 @@ KANetworkTest >> testNetworkOnlyFindsAddedNodes
 		raise: NotFound
 ]]]
 
-Then we can simply express the ==nodeAt:== using the predefined Pharo exception ==NotFound==.
+Then we can simply express the ==nodeAt:== using the predefined Pharo exception ==NotFound==:
 
 [[[language=smalltalk
 KANetwork >> nodeAt: anAddress
@@ -565,7 +569,9 @@ KANetwork >> nodeAt: anAddress
 		ifNone: [ NotFound signalFor: anAddress in: self ]
 ]]]
 
-And finally, we want to be able to lookup links between two nodes. Again we define a new test.
+!!!! Looking up links
+
+And finally, we want to be able to lookup links between two nodes. Again we define a new test:
 
 [[[language=smalltalk
 KANetworkTest >> testNetworkFindsLinks
@@ -581,7 +587,7 @@ KANetworkTest >> testNetworkFindsLinks
 		equals: (net nodeAt: #ping)
 ]]]
 
-And we define the method ==linkFrom:to:== identifying a link between a source and destination address 
+And we define the method ==linkFrom:to:== identifying a link between source and destination nodes with matching addresses:
 
 [[[language=smalltalk
 KANetwork >> linkFrom: sourceAddress to: destinationAddress
