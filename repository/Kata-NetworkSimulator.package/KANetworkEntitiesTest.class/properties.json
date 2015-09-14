@@ -6,10 +6,8 @@
 		 ],
 	"commentStamp" : "",
 	"instvars" : [
-		"net",
-		"hub",
-		"alone" ],
-	"name" : "KANetworkExercisesTest",
+		 ],
+	"name" : "KANetworkEntitiesTest",
 	"pools" : [
 		 ],
 	"super" : "TestCase",

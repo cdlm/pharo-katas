@@ -6,7 +6,9 @@
 		 ],
 	"commentStamp" : "",
 	"instvars" : [
-		 ],
+		"net",
+		"hub",
+		"alone" ],
 	"name" : "KANetworkTest",
 	"pools" : [
 		 ],
