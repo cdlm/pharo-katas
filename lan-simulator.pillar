@@ -603,11 +603,87 @@ KANetwork >> linkFrom: sourceAddress to: destinationAddress
 
 As a final check, let's reproduce some of our previous tests in the network we just built.
 
+[[[language=smalltalk
+KANetworkTest >> testSelfSend
+	| packet |
+	packet := KANetworkPacket
+		from: alone address
+		to: alone address
+		payload: #something.
+	self assert: (packet isAddressedTo: alone).
+	self assert: (packet isOriginatingFrom: alone).
+
+	alone send: packet.
+	self deny: (alone hasReceived: packet).
+	self assert: (alone loopback isTransmitting: packet).
+
+	alone loopback transmit: packet.
+	self deny: (alone loopback isTransmitting: packet).
+	self assert: (alone hasReceived: packet)
+]]]
+
+You can see that we used new testing methods ==isAddressedTo:== and ==isOriginatingFrom:==; these are just to avoid explicitly comparing addresses, for convenience:
+
+[[[language=smalltalk
+KANetworkPacket >> isAdressedTo: aNode
+	^ destinationAddress = aNode address
+]]]
+
+[[[language=smalltalk
+KANetworkPacket >> isOriginatingFrom: aNode
+	^ sourceAddress = aNode address
+]]]
+
+The second test is transmitting a packet between directly connected nodes:
+
+[[[language=smalltalk
+KANetworkTest >> testDirectSend
+	| packet ping pong link |
+	packet := KANetworkPacket from: #ping to: #pong payload: #ball.
+	ping := net nodeAt: #ping.
+	pong := net nodeAt: #pong.
+	link := net linkFrom: #ping to: #pong.
+
+	ping send: packet.
+	self assert: (link isTransmitting: packet).
+	self deny: (pong hasReceived: packet).
+
+	link transmit: packet.
+	self deny: (link isTransmitting: packet).
+	self assert: (pong hasReceived: packet)
+]]]
+
+Both those tests should pass with no additional work, since they just reproduce what we already tested in ==KANetworkEntitiesTest==.
+
 
 !! Packet delivery in a more realistic network
 
 Given the star network that we just defined, let's look at a few scenarios.
 Until now, we only tested packet delivery between directly connected nodes; let's try sending a node so that the packet has to be forwarded through the hub.
+
+[[[language=smalltalk
+KANetworkTest >> testSendViaHub
+	| hello mac pc1 firstLink secondLink |
+	hello := KANetworkPacket from: #mac to: #pc1 payload: 'Hello!'.
+	mac := net nodeAt: #mac.
+	pc1 := net nodeAt: #pc1.
+	firstLink := net linkFrom: #mac to: #hub.
+	secondLink := net linkFrom: #hub to: #pc1.
+
+	self assert: (hello isAddressedTo: pc1).
+	self assert: (hello isOriginatingFrom: mac).
+
+	mac send: hello.
+	self deny: (pc1 hasReceived: hello).
+	self assert: (firstLink isTransmitting: hello).
+
+	firstLink transmit: hello.
+	self deny: (pc1 hasReceived: hello).
+	self assert: (secondLink isTransmitting: hello).
+
+	secondLink transmit: hello.
+	self assert: (pc1 hasReceived: hello).
+]]]
 
 
 !!! Differenciating hubs from normal nodes
