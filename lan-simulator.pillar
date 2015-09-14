@@ -308,8 +308,9 @@ KANetworkLink >> initialize
 
 [[[language=smalltalk
 KANetworkLink >> emit: aPacket
-    "Since packet are not emitted right away, store it in the packets to trasmit"
-    packetsToTransmit add: aPacket
+	"Packets are not transmitted right away, but stored.
+	Transmission is explicitly triggered later, by sending #transmit:."
+	packetsToTransmit add: aPacket
 ]]]
 
 We also add a testing method to check whether a given packet is currently being transmitted by a link:
@@ -326,7 +327,7 @@ A link can not transmit packets that have not been sent via it, and once transmi
 
 [[[language=smalltalk
 KANetworkLink >> transmit: aPacket
-	"Transmit the receiver to the destination of the receiver."
+	"Transmit aPacket to the destination node of the receiver link."
 	(self isTransmitting: aPacket)
 		ifTrue: [
 			packetsToTransmit remove: aPacket.
@@ -427,7 +428,7 @@ Since some routing algorithms select more than one link, we will implement routi
 
 [[[language=smalltalk
 KANetworkNode >> send: aPacket
-	"When we send a packet, let a chance to implement some routing algorithm."
+	"Send aPacket, leaving the responsibility of routing to the node."
 	self
 		linksTowards: aPacket destinationAddress
 		do: [ :link | self send: aPacket via: link ]
@@ -438,7 +439,8 @@ We can however make a special case for loopback, when the destination address is
 
 [[[language=smalltalk
 KANetworkNode >> linksTowards: anAddress do: aBlock
-	"By default implement a simple algorithm: when the packet is sent to the receiver, use the loopback link, else iterate on all the outgoing nodes."
+	"Simple flood algorithm: route via all outgoing links.
+	However, just loopback if the receiver node is the routing destination."
 	anAddress = address
 		ifTrue: [ aBlock value: self loopback ]
 		ifFalse: [ outgoingLinks do: aBlock ]
