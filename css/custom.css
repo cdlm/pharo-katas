@@ -10,7 +10,6 @@
 [data-rmd] :not(a)::before,
 [data-rmd] :not(a)::after {
     color: #08c;
-    /* color: #205080; */
 }
 
 /* Our own font-family. Also setting one for code elements */
@@ -105,6 +104,6 @@ pre {
     font-size: .85em;
 }
 
-p code {
+:not(pre) code {
     color: rgb(68, 102, 136);
 }
