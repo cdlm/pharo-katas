@@ -1,3 +1,5 @@
+{ "title": "A simple network simulator" }
+
 ! Designing a simple network simulation platform
 
 This document will show how we develop a simulator for a computer network, from scratch, and step by step.
