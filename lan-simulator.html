@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>A simple network simulator</title>
+        <meta name="description" content="">
+        <meta name="author" content="Damien Pollet">
+        <link href='https://fonts.googleapis.com/css?family=Fira+Mono:400,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="css/remarkdown.css">
+        <link rel="stylesheet" href="css/custom.css">
+    </head>
+    <body data-rmd="h1-underline h2-underline ul-star">
+        <section>
+<h1> Designing a simple network simulation platform</h1>
+
+<p>
+This document will show how we develop a simulator for a computer network, from scratch, and step by step.
+The program we are going to develop is a simple representation of a computer network: it consists of objects that represent different parts of a local network such as packets, nodes, workstations, routers and hubs.
+</p>
+<p>
+At first, we will just simulate the different steps of packet delivery and have fun with the system.
+In a second step we will extend the basic functionalities by adding extensions such as a hub and different packet routing strategies.
+Doing so, we will revisit many object-oriented concepts such as polymorphism, encapsulation, hooks and templates.
+Finally this system could be refined to become an experiment platform to explore and understand distributed algorithms.
+</p>
+
+<section>
+<h2>1.  Basic definitions and a starting point</h2>
+
+<p>
+We need to establish the basic model; what does the description above tell us?
+A network is a number of interconnected nodes, which exchange data packets.
+We will therefore probably need to model the nodes, the connection links, and the packets:
+</p>
+<ul>
+<li> Nodes have addresses, can send and receive packets;</li>
+<li> Links connect two nodes together, and transmit packets between them;</li>
+<li> Packets transport a payload and have the address of the node to which it should be delivered; if we want nodes to be able to answer, packets should also have the address of the node which originally sent it.</li>
+</ul>
+
+<p>
+Let's start exploring by sketching some simple tests; this requires defining a test class:
+</p>
+<p>
+<figure><pre><code class="smalltalk">TestCase subclass: #KANetworkEntitiesTest
+    instanceVariableNames: ''
+    classVariableNames: ''
+    category: 'NetworkSimulator-Tests'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Since we will create several classes, we used the following notation to refer to the classes in which a method should be defined.
+<code>KANetworkEntitiesTest &gt;&gt; testPacketCreation</code> means that the method <code>testPacketCreation</code> is defined in the class <code>KANetworkEntitiesTest</code>.
+</p>
+
+<section>
+<h3>1.1.  Packets are simple value objects</h3>
+
+<p>
+Packets are the simplest objects in our model: we need to create them, and ask them about the data they contain, but that's about it.
+Once created, a packet will not change its data, and the packet itself has no knowledge of the network, and no behavior that we can really talk about.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkEntitiesTest &gt;&gt; testPacketCreation
+	| src dest payload packet |
+	src := Object new.
+	dest := Object new.
+	payload := Object new.
+
+	packet := KANetworkPacket from: src to: dest payload: payload.
+
+	self assert: packet sourceAddress equals: src.
+	self assert: packet destinationAddress equals: dest.
+	self assert: packet payload equals: payload</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+In this unit test, we wrote how we think packets should be created, using a <code>from:to:payload:</code> constructor message, and how it should be accessed, using three messages <code>sourceAddress</code>, <code>destinationAddress</code>, and <code>payload</code>.
+Since we have not yet decided what addresses and payloads should look like, we just pass arbitrary objects as parameters; all that matters is that when we ask the packet, it returns the correct object back.
+</p>
+<p>
+Of course, if we now compile and run this test method, it will fail, because the class <code>KANetworkPacket</code> has not been created yet, nor any of the four above messages.
+You can either execute and let the system prompt you when needed or we can define the class:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkPacket
+	instanceVariableNames: 'sourceAddress destinationAddress payload'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The class-side constructor method creates an instance then sends it an initialization message:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket class &gt;&gt; from: sourceAddress to: destinationAddress payload: anObject
+	^ self new
+		initializeSource: sourceAddress
+		destination: destinationAddress
+		payload: anObject</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The initialization method is only supposed to be called when creating packets.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; initializeSource: source destination: destination payload: anObject
+	sourceAddress := source.
+	destinationAddress := destination.
+	payload := anObject</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Once a packet is created, all we need to do with it is to obtain its payload, or the addresses of its source or destination nodes.
+We thus define an accessor method for each instance variable.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; sourceAddress
+	^ sourceAddress</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; destinationAddress
+	^ destinationAddress</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; payload
+	^ payload</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Now our test should be running and passing.
+That's enough for our admittedly simplistic model of packets; we completely ignore the layers of the OSI model, but it could be an interesting exercise to model that more precisely.
+</p>
+
+</section><section>
+<h3>1.2.  Nodes</h3>
+
+<p>
+The first obvious thing we can say about a network node is that if we want to be able to send packets to it, then it should have an address; let's translate that into a test:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkEntitiesTest &gt;&gt; testNodeCreation
+	| address node |
+	address := Object new.
+	node := KANetworkNode withAddress: address.
+
+	self assert: node address equals: address</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Like before, before running this test, we have to define the <code>KANetworkNode</code> class:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkNode
+    instanceVariableNames: 'address'
+    classVariableNames: ''
+    category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Then a class-side constructor method taking the address of the new node as parameter:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode class &gt;&gt; withAddress: aNetworkAddress
+	^ self new
+		initializeAddress: aNetworkAddress;
+		yourself</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The constructor relies on an instance-side initialization method:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; initializeAddress: aNetworkAddress
+	address := aNetworkAddress</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+And we can ask a node for its address:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; address
+    ^ address</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Again our simplistic tests should now pass.
+</p>
+
+</section><section>
+<h3>1.3.  Links are one-way connections between nodes</h3>
+
+<p>
+After nodes and packets, we should look at links.
+In the real world, a network cable is usually bidirectional, but here we're going to keep it simple and define links as simple one-way connections.
+To make a two-way connection, we will just make two links, one in each direction.
+</p>
+<p>
+Therefore, a link has a source and a destination node; additionally, to be able to send packets, nodes need to know about their outgoing links.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkEntitiesTest &gt;&gt; testNodeLinking
+	| node1 node2 link |
+	node1 := KANetworkNode withAddress: #address1.
+	node2 := KANetworkNode withAddress: #address2.
+	link := KANetworkLink from: node1 to: node2.
+
+	link attach.
+
+	self assert: (node1 hasLinkTo: node2)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+This test creates two nodes and a link; after telling the link to <em>attach</em> itself,  we check that it did so: the source node should confirm that it has an outgoing link to the destination node.
+Note that the constructor could have registered the link with <code>node1</code>, but we opted for a separate message <code>attach</code> instead, because it's bad form to have a constructor change other objets; this way we can build links between arbitrary nodes and still have control of when the connection really becomes part of the network model.
+</p>
+<p>
+Again, we need to define class of links:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkLink
+	instanceVariableNames: 'source destination'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+A constructor that passes the two required parameters to an instance-side initialization message:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink class &gt;&gt; from: sourceNode to: destinationNode
+	^ self new
+		initializeFrom: sourceNode to: destinationNode</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The initialization method itself:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; initializeFrom: sourceNode to: destinationNode
+	source := sourceNode.
+	destination := destinationNode.</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Accessors:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; source
+	^ source</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; destination
+    ^ destination</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The <code>attach</code> method of a link delegates to the source node (the link knows which node has to do something, and the node knows what to do precisely):
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; attach
+	source attach: self</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+If each node knows about all its outgoing links, it means it has a collection of those; we therefore need to extend <code>KANetworkNode</code>, first with an additional instance variable <code>outgoingLinks</code>:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+This variable needs to be initialized properly:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; initialize
+	outgoingLinks := Set new.</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We can then implement the <code>attach:</code> method:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; attach: anOutgoingLink
+	outgoingLinks add: anOutgoingLink</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+And finally the testing method on instances of <code>KANetworkNode</code>:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; hasLinkTo: aNetworkNode
+	^ outgoingLinks
+		anySatisfy: [ :any | any destination == aNetworkNode ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Again, all the tests should now pass.
+</p>
+
+</section><section>
+<h3>1.4.  Nodes can emit packets</h3>
+
+<p>
+The next big feature is that nodes should be able to send and receive packets, and links to transmit them.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkEntitiesTest &gt;&gt; testSendAndTransmit
+	| srcNode destNode link packet |
+	srcNode := KANetworkNode withAddress: #src.
+	destNode := KANetworkNode withAddress: #dest.
+	link := (KANetworkLink from: srcNode to: destNode) attach; yourself.
+	packet := KANetworkPacket from: #address to: #dest payload: #payload.
+
+	srcNode send: packet via: link.
+	self assert: (link isTransmitting: packet).
+	self deny: (destNode hasReceived: packet).
+
+	link transmit: packet.
+	self deny: (link isTransmitting: packet).
+	self assert: (destNode hasReceived: packet)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We create and setup two nodes, a link between them, and a packet.
+Now, to control which packets get delivered in which order, we specify that it happens in separate, controlled steps.
+This will allow us to model packet delivery precisely, to simulate latency, out-of-order reception, etc.:
+</p>
+<ul>
+<li> First, we tell the node to send the packet using <code>send:via:</code>. At that point the packet should be passed to the link for transmission, but not completely delivered yet.</li>
+<li> Then, we tell the link to actually pass the packet along using <code>transmit:</code>, and thus the packet should be received by the destination node.</li>
+</ul>
+
+<section>
+<h4> Sending</h4>
+
+<p>
+To send a packet, the node emits it on the link:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; send: aPacket via: aLink
+	aLink emit: aPacket</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Since the packet will not be delivered right away, emitting a packet really just stores it in the link, until the user elects this packet to proceed using the <code>transmit:</code> message.
+Storing packets requires adding an instance variable to <code>KANetworkLink</code>, as well as specifying how this instance variable should be initialized.
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkLink
+	instanceVariableNames: 'source destination packetsToTransmit'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; initialize
+	packetsToTransmit := OrderedCollection new</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; emit: aPacket
+	&quot;Packets are not transmitted right away, but stored.
+	Transmission is explicitly triggered later, by sending #transmit:.&quot;
+	packetsToTransmit add: aPacket</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We also add a testing method to check whether a given packet is currently being transmitted by a link:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; isTransmitting: aPacket
+	^ packetsToTransmit includes: aPacket</code></pre><figcaption></figcaption></figure>
+
+</p>
+</section><section>
+<h4> Transmitting</h4>
+
+<p>
+Transmitting a packet means passing it to the destination node, which will receive it.
+A link can not transmit packets that have not been sent via it, and once transmitted, the packet leaves the link:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkLink &gt;&gt; transmit: aPacket
+	&quot;Transmit aPacket to the destination node of the receiver link.&quot;
+	(self isTransmitting: aPacket)
+		ifTrue: [
+			packetsToTransmit remove: aPacket.
+			destination receive: aPacket from: self ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Nodes only consume packets addressed to them; this is what will happen in our test, so we can worry about the alternative case later (<code>notYetImplemented</code> is a special message that we can use in place of code that we will have to write eventually, but prefer to ignore for the time being).
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; receive: aPacket from: aLink
+	aPacket destinationAddress = address
+		ifTrue: [ self consume: aPacket ]
+		ifFalse: [ self notYetImplemented ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Consuming a packet represents what the node will do with it; for general simulations, we only need to remember which packets did arrive:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks arrivedPackets'
+	classVariableNames: ''
+	category: 'Kata-NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; initialize
+	outgoingLinks := Set new.
+	arrivedPackets := OrderedCollection new</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We define a simple <code>consume:</code> method: it simply adds the packet to a list of arrived packets.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; consume: aPacket
+	arrivedPackets add: aPacket</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; hasReceived: aPacket
+	^ arrivedPackets includes: aPacket</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+At that point all our tests should pass.
+Note that the message <code>notYetImplemented</code> is not called, since our tests do not require routing.
+</p>
+
+</section></section><section>
+<h3>1.5.  A standalone node can transmit a packet to itself</h3>
+
+<p>
+If a node wants to send a packet to itself, it does not need any connection to do so.
+In real-world networking stacks, loopback routing shortcuts the lower networking layers; however, this is finer detail than we are modeling here.
+Still, we want to model the fact that the loopback link is a little special, so each node will store its own loopback link, separately from the outgoing links.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkEntitiesTest &gt;&gt; testLoopback
+	| node packet |
+	node := KANetworkNode withAddress: #address.
+	packet := KANetworkPacket from: #address to: #address payload: #payload.
+	
+	node send: packet.
+	node loopback transmit: packet.
+	
+	self assert: (node hasReceived: packet).
+	self deny: (node loopback isTransmitting: packet) </code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The loopback link is implicitely created as part of the node itself.
+We also introduce a new <code>send:</code> message, which takes the responsibility of selecting the link to emit the packet.
+For triggering packet transmission, we have to use a specific accessor to find the loopback link of the node.
+</p>
+<p>
+First, we have to add yet another instance variable in nodes:
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetworkNode
+	instanceVariableNames: 'address outgoingLinks loopback arrivedPackets'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+As with all instance variables, we have to remember to make sure it is correctly initialized; we thus modify <code>initialize</code>:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; initialize
+	loopback := KANetworkLink from: self to: self.
+	outgoingLinks := Set new.
+	arrivedPackets := OrderedCollection new</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The accessor has nothing special:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; loopback
+	^ loopback</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+And finally we can focus on the <code>send:</code> method and automatic link selection.
+This method has to rely on some routing algorithm to identify which links will transmit the packet closer to its destination.
+Since some routing algorithms select more than one link, we will implement routing as an <em>iteration</em> method, which evaluates the given block for each selected link.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; send: aPacket
+	&quot;Send aPacket, leaving the responsibility of routing to the node.&quot;
+	self
+		linksTowards: aPacket destinationAddress
+		do: [ :link | self send: aPacket via: link ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+One of the simplest routing algorithm is flooding: just send the packet via every link; this is obviously a waste of bandwidth, but it works.
+We can however make a special case for loopback, when the destination address is the one of the current node. When the address of a packet is the address
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; linksTowards: anAddress do: aBlock
+	&quot;Simple flood algorithm: route via all outgoing links.
+	However, just loopback if the receiver node is the routing destination.&quot;
+	anAddress = address
+		ifTrue: [ aBlock value: self loopback ]
+		ifFalse: [ outgoingLinks do: aBlock ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Now we have the basic model working, and we can try more realistic examples.
+</p>
+
+</section></section><section>
+<h2>2.  Modeling the network itself</h2>
+
+<p>
+More realistic tests will require non-trivial networks.
+We thus need an object that represents the network as a whole, to avoid keeping many nodes and links in individual variables.
+We will introduce a new class <code>KANetwork</code>, whose responsibility is to help us build, assemble then find the nodes and links involved in a network.
+</p>
+<p>
+Let's start by creating another test class, to keep things in order:
+</p>
+<p>
+<figure><pre><code class="smalltalk">TestCase subclass: #KANetworkTest
+	instanceVariableNames: 'net hub alone'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Tests'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Since every test needs to rebuild the whole network from scratch, we specify so in the <code>setUp</code> method:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; setUp
+	self buildNetwork</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Before anything else, let's write a tests that will pass once we've made progress; we want to access network nodes given only their addresses. Here we check that we get a hub node based on its address: 
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testNetworkFindsNodesByAddress
+	self
+		assert: (net nodeAt: hub address ifNone: [ self fail ])
+		equals: hub</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We will have to implement this <code>nodeAt:ifNone:</code> on our <code>KANetwork</code> class; but first we need to decide how its instances are built.
+Let's build network <code>net</code>, with the main part connected in a star shape around a <code>hub</code> node; a pair of nodes <code>ping</code> and <code>pong</code> are part of the network but not connected to <code>hub</code>, and the <code>alone</code> node is just by itself, not even added to the network:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; buildNetwork
+	alone := KANetworkNode withAddress: #alone.
+
+	net := KANetwork new.
+
+	hub := KANetworkNode withAddress: #hub.
+	#(mac pc1 pc2 prn) do: [ :addr |
+		| node |
+		node := KANetworkNode withAddress: addr.
+		net connect: node to: hub ].
+
+	net
+		connect: (KANetworkNode withAddress: #ping)
+		to: (KANetworkNode withAddress: #pong)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<section>
+<h4> The network class</h4>
+
+<p>
+This method builds nodes as before, but sends <code>connect:to:</code> to the <code>net</code> object instead of creating links explicitly; this is how we tell the network which nodes and links it should remember.
+</p>
+<p>
+<figure><pre><code class="smalltalk">Object subclass: #KANetwork
+	instanceVariableNames: 'nodes links'
+	classVariableNames: ''
+	category: 'NetworkSimulator-Core'</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Let's not forget about proper initialization:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; initialize
+	nodes := Set new.
+	links := Set new</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Connecting nodes means creating the links in both directions, then adding both nodes and both links in their corresponding collections:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; connect: aNode to: anotherNode
+	self add: aNode.
+	self add: anotherNode.
+	links add: (self makeLinkFrom: aNode to: anotherNode) attach.
+	links add: (self makeLinkFrom: anotherNode to: aNode) attach</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Note that the <code>attach</code> method we defined previously effectively returns the link.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; add: aNode
+	nodes add: aNode</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; makeLinkFrom: aNode to: anotherNode
+	^ KANetworkLink from: aNode to: anotherNode</code></pre><figcaption></figcaption></figure>
+
+</p>
+</section><section>
+<h4> Looking up nodes</h4>
+
+<p>
+Now we can implement node lookup:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; nodeAt: anAddress ifNone: noneBlock
+	^ nodes
+		detect: [ :any | any address = anAddress ]
+		ifNone: noneBlock</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+We can also make a convenience <code>nodeAt:</code> method for node lookup, that will raise an exception if it does not find the node.
+Let's first write a test which validates this behavior:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testNetworkOnlyFindsAddedNodes
+	self
+		should: [ net nodeAt: alone address ]
+		raise: NotFound</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Then we can simply express the <code>nodeAt:</code> using the predefined Pharo exception <code>NotFound</code>:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; nodeAt: anAddress
+	^ self
+		nodeAt: anAddress
+		ifNone: [ NotFound signalFor: anAddress in: self ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+</section><section>
+<h4> Looking up links</h4>
+
+<p>
+And finally, we want to be able to lookup links between two nodes. Again we define a new test:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testNetworkFindsLinks
+	| link |
+	self
+		shouldnt: [ link := net linkFrom: #pong to: #ping ]
+		raise: NotFound.
+	self
+		assert: link source
+		equals: (net nodeAt: #pong).
+	self
+		assert: link destination
+		equals: (net nodeAt: #ping)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+And we define the method <code>linkFrom:to:</code> identifying a link between source and destination nodes with matching addresses:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetwork &gt;&gt; linkFrom: sourceAddress to: destinationAddress
+	^ links
+		detect: [ :anyLink |
+			anyLink source address = sourceAddress
+				and: [ anyLink destination address = destinationAddress ] ]
+		ifNone: [
+            NotFound
+                signalFor: sourceAddress -&gt; destinationAddress
+                in: self ]</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+As a final check, let's reproduce some of our previous tests in the network we just built.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testSelfSend
+	| packet |
+	packet := KANetworkPacket
+		from: alone address
+		to: alone address
+		payload: #something.
+	self assert: (packet isAddressedTo: alone).
+	self assert: (packet isOriginatingFrom: alone).
+
+	alone send: packet.
+	self deny: (alone hasReceived: packet).
+	self assert: (alone loopback isTransmitting: packet).
+
+	alone loopback transmit: packet.
+	self deny: (alone loopback isTransmitting: packet).
+	self assert: (alone hasReceived: packet)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+You can see that we used new testing methods <code>isAddressedTo:</code> and <code>isOriginatingFrom:</code>; these are just to avoid explicitly comparing addresses, for convenience:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; isAdressedTo: aNode
+	^ destinationAddress = aNode address</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; isOriginatingFrom: aNode
+	^ sourceAddress = aNode address</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+The second test is transmitting a packet between directly connected nodes:
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testDirectSend
+	| packet ping pong link |
+	packet := KANetworkPacket from: #ping to: #pong payload: #ball.
+	ping := net nodeAt: #ping.
+	pong := net nodeAt: #pong.
+	link := net linkFrom: #ping to: #pong.
+
+	ping send: packet.
+	self assert: (link isTransmitting: packet).
+	self deny: (pong hasReceived: packet).
+
+	link transmit: packet.
+	self deny: (link isTransmitting: packet).
+	self assert: (pong hasReceived: packet)</code></pre><figcaption></figcaption></figure>
+
+</p>
+<p>
+Both those tests should pass with no additional work, since they just reproduce what we already tested in <code>KANetworkEntitiesTest</code>.
+</p>
+
+</section></section><section>
+<h2>3.  Packet delivery in a more realistic network</h2>
+
+<p>
+Given the star network that we just defined, let's look at a few scenarios.
+Until now, we only tested packet delivery between directly connected nodes; let's try sending a node so that the packet has to be forwarded through the hub.
+</p>
+<p>
+<figure><pre><code class="smalltalk">KANetworkTest &gt;&gt; testSendViaHub
+	| hello mac pc1 firstLink secondLink |
+	hello := KANetworkPacket from: #mac to: #pc1 payload: 'Hello!'.
+	mac := net nodeAt: #mac.
+	pc1 := net nodeAt: #pc1.
+	firstLink := net linkFrom: #mac to: #hub.
+	secondLink := net linkFrom: #hub to: #pc1.
+
+	self assert: (hello isAddressedTo: pc1).
+	self assert: (hello isOriginatingFrom: mac).
+
+	mac send: hello.
+	self deny: (pc1 hasReceived: hello).
+	self assert: (firstLink isTransmitting: hello).
+
+	firstLink transmit: hello.
+	self deny: (pc1 hasReceived: hello).
+	self assert: (secondLink isTransmitting: hello).
+
+	secondLink transmit: hello.
+	self assert: (pc1 hasReceived: hello).</code></pre><figcaption></figcaption></figure>
+
+</p>
+
+<section>
+<h3>3.1.  Differenciating hubs from normal nodes</h3>
+
+
+</section><section>
+<h3>3.2.  Specializing other nodes</h3>
+
+
+</section><section>
+<h3>3.3.  Cycles and routing tables</h3>
+
+</section></section></section>
+    </body>
+</html>
