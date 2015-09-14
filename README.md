@@ -1,10 +1,11 @@
 # Pharo development examples and exercises
 
-This repository contains small [Pharo][] programs to be used as development examples or use-cases during programming courses.
+This repository contains the code of small [Pharo][] programs to be used as development examples or use-cases during programming courses.
 
-## A simple network simulator
+**Students:** [check the program explanations and tutorials here](http://cdlm.github.io/pharo-katas).
 
-The package `Kata-NetworkSimulator` implements a simple representation of a computer network, showing how packets are delivered.
-See `./lan-simulator.pillar`.
+**Contributors:** the complete code is committed as a [FileTree][] snapshot in the `repository` subdirectory, and tutorials are written using [Pillar][].
 
 [pharo]: http://pharo.org
+[pillar]: https://github.com/pillar-markup/pillar
+[filetree]: https://github.com/dalehenrich/filetree
