@@ -662,7 +662,6 @@ Both those tests should pass with no additional work, since they just reproduce 
 
 !! Packet delivery in a more realistic network
 
-Given the star network that we just defined, let's look at a few scenarios.
 Until now, we only tested packet delivery between directly connected nodes; let's try sending a node so that the packet has to be forwarded through the hub.
 
 [[[language=smalltalk
@@ -688,6 +687,23 @@ KANetworkTest >> testSendViaHub
 	secondLink transmit: hello.
 	self assert: (pc1 hasReceived: hello).
 ]]]
+
+If you run this test, you will see that it fails because of the ==notYetImplemented== message we left earlier; it's time to fix that!
+When a node receives a packet but is not the recipient, it should forward the packet:
+
+[[[language=smalltalk
+KANetworkNode >> receive: aPacket from: aLink
+	aPacket destinationAddress = address
+		ifTrue: [ self consume: aPacket ]
+		ifFalse: [ self forward: aPacket from: aLink ]
+]]]
+
+Now we need to implement packet forwarding, but there is an trap.
+An easy solution would be to simply ==send:== the packet again: the hub would send the packet to all its connected nodes, one of which happens to be ==pc1==, the recipient, so all is good!
+
+Wrong.
+
+The packet would be sent back to other nodes than the recipient; what will those nodes do when they receive a packet not addressed to them? Forward it. Where? To all their neighbours, which will forward it again... so when is the forwarding going to stop?
 
 
 !!! Differenciating hubs from normal nodes
