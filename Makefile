@@ -1,14 +1,29 @@
-.phony : all gh-pages gh-push
+.phony : all clean gh-pages gh-push
 
-all : output output/index.html output/lan-simulator.html output/css/remarkdown.css output/css/custom.css
+DESTDIR = output
+OUTPUTS = $(addprefix $(DESTDIR)/, \
+	index.html \
+	lan-simulator.html )
+SUPPORT = $(addprefix $(DESTDIR)/, \
+	css/remarkdown.css \
+	css/custom.css )
 
-output :
-	git worktree add output gh-pages
+ALL = $(OUTPUTS) $(SUPPORT)
 
-output/%.html : %.pillar pillar.conf template.mustache
+all : $(ALL)
+
+clean :
+	rm -fr $(DESTDIR)
+	git worktree prune --verbose
+
+$(DESTDIR) :
+	git worktree add $(DESTDIR) gh-pages
+	rm $(ALL)
+
+$(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.mustache | $(DESTDIR)
 	pillar/pillar export
 
-output/%.css : %.css
+$(SUPPORT) : $(DESTDIR)/% : % | $(DESTDIR)
 	cp $< $@
 
 output-git = git -C output
