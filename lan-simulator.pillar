@@ -629,7 +629,7 @@ KANetworkTest >> testSelfSend
 You can see that we used new testing methods ==isAddressedTo:== and ==isOriginatingFrom:==; these are just to avoid explicitly comparing addresses, for convenience:
 
 [[[language=smalltalk
-KANetworkPacket >> isAdressedTo: aNode
+KANetworkPacket >> isAddressedTo: aNode
 	^ destinationAddress = aNode address
 ]]]
 
