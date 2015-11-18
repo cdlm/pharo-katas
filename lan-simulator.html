@@ -721,7 +721,7 @@ As a final check, let's reproduce some of our previous tests in the network we j
 You can see that we used new testing methods <code>isAddressedTo:</code> and <code>isOriginatingFrom:</code>; these are just to avoid explicitly comparing addresses, for convenience:
 </p>
 <p>
-<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; isAdressedTo: aNode
+<figure><pre><code class="smalltalk">KANetworkPacket &gt;&gt; isAddressedTo: aNode
 	^ destinationAddress = aNode address</code></pre><figcaption></figcaption></figure>
 
 </p>
