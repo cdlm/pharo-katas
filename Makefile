@@ -1,4 +1,4 @@
-.phony : all clean gh-pages gh-push
+.phony : all clean snapshot deploy
 
 DESTDIR = output
 OUTPUTS = $(addprefix $(DESTDIR)/, \
