@@ -98,9 +98,11 @@ a:active {
 }
 
 pre {
-    margin: 1.5em -30px;
-    padding: .5em 30px;
-    background: rgba(65, 100, 140, 0.1);
+    margin: 1.5em -80px;
+    padding: .5em 80px;
+    background: rgba(65, 100, 140, 0.05);
+    border-top: 1px dotted rgba(65, 100, 140, 0.1);
+    border-bottom: 1px dotted rgba(65, 100, 140, 0.1);
     font-size: .85em;
 }
 
