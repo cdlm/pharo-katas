@@ -63,7 +63,7 @@ You can either execute and let the system prompt you when needed or we can defin
 Object subclass: #KANetworkPacket
 	instanceVariableNames: 'sourceAddress destinationAddress payload'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+    category: 'NetworkSimulator-Core'
 ]]]
 
 The class-side constructor method creates an instance then sends it an initialization message:
@@ -351,7 +351,7 @@ Consuming a packet represents what the node will do with it; for general simulat
 Object subclass: #KANetworkNode
 	instanceVariableNames: 'address outgoingLinks arrivedPackets'
 	classVariableNames: ''
-	category: 'Kata-NetworkSimulator-Core'
+    category: 'NetworkSimulator-Core'
 ]]]
 
 [[[language=smalltalk
