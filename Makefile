@@ -1,4 +1,4 @@
-.phony : all clean snapshot deploy
+.phony : all clean snapshot deploy watch
 
 DESTDIR = output
 OUTPUTS = $(addprefix $(DESTDIR)/, \
@@ -34,3 +34,7 @@ snapshot : all
 
 deploy : snapshot
 	$(output-git) push origin
+
+watch :
+	@which watchman-make >/dev/null || { echo "Missing command 'watchman-make': brew install watchman >&2"; false; }
+	watchman-make -p pillar.conf template.mustache 'css/*.css' '*.pillar' -t all
