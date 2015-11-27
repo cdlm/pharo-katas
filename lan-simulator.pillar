@@ -703,10 +703,40 @@ An easy solution would be to simply ==send:== the packet again: the hub would se
 
 Wrong.
 
-The packet would be sent back to other nodes than the recipient; what will those nodes do when they receive a packet not addressed to them? Forward it. Where? To all their neighbours, which will forward it again... so when is the forwarding going to stop?
+The packet would be sent back to other nodes than the recipient; what would those nodes do when they receive a packet not addressed to them? Forward it. Where? To all their neighbours, which would forward it again... so when would the forwarding stop?
 
 
 !!! Differenciating hubs from normal nodes
+
+To fix this, we need hubs to behave differently from nodes.
+When receiving a packet addressed to another node, a hub should forward it, but a normal node should just ignore it.
+
+Let's first define an empty ==forward:from:== method for nodes:
+
+[[[language=smalltalk
+KANetworkNode >> forward: aPacket from: arrivalLink
+    "Do nothing. Normal nodes do not route packets."
+]]]
+
+Now we can add a new class for hubs, which will have an actual implementation of forwarding:
+
+[[[language=smalltalk
+KANetworkNode subclass: #KANetworkHub
+    instanceVariableNames: ''
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'
+]]]
+
+A hub does not have routing information, so all we can do is forward the packet on all outbound links, unless the link goes back where the packet arrived from:
+
+[[[language=smalltalk
+KANetworkHub >> forward: aPacket from: arrivalLink
+    self
+        linksTowards: aPacket destinationAddress
+        do: [ :link |
+            link destination == arrivalLink source
+                ifFalse: [ self send: aPacket via: link ] ]
+]]]
 
 
 !!! Specializing other nodes
