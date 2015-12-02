@@ -6,7 +6,8 @@ OUTPUTS = $(addprefix $(DESTDIR)/, \
 	lan-simulator.html )
 SUPPORT = $(addprefix $(DESTDIR)/, \
 	css/remarkdown.css \
-	css/custom.css )
+	css/custom.css \
+	images/lan-star.svg )
 
 ALL = $(OUTPUTS) $(SUPPORT)
 DIRS = $(sort $(foreach f,$(SUPPORT),$(dir $(f))))

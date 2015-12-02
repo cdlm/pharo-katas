@@ -485,6 +485,8 @@ KANetworkTest >> testNetworkFindsNodesByAddress
 We will have to implement this ==nodeAt:ifNone:== on our ==KANetwork== class; but first we need to decide how its instances are built.
 Let's build network ==net==, with the main part connected in a star shape around a ==hub== node; a pair of nodes ==ping== and ==pong== are part of the network but not connected to ==hub==, and the ==alone== node is just by itself, not even added to the network:
 
++file://images/lan-star.svg|width=50+
+
 [[[language=smalltalk
 KANetworkTest >> buildNetwork
     alone := KANetworkNode withAddress: #alone.
