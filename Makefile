@@ -9,6 +9,7 @@ SUPPORT = $(addprefix $(DESTDIR)/, \
 	css/custom.css )
 
 ALL = $(OUTPUTS) $(SUPPORT)
+DIRS = $(sort $(foreach f,$(SUPPORT),$(dir $(f))))
 
 all : $(ALL)
 
@@ -18,12 +19,15 @@ clean :
 
 $(DESTDIR) :
 	git worktree add $(DESTDIR) gh-pages
-	rm $(ALL)
+	rm -f $(ALL)
 
 $(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.mustache | $(DESTDIR)
 	pillar/pillar export
 
-$(SUPPORT) : $(DESTDIR)/% : % | $(DESTDIR)
+$(DIRS) : $(DESTDIR)
+	mkdir -p $@
+
+$(SUPPORT) : $(DESTDIR)/% : % | $(DIRS)
 	cp $< $@
 
 output-git = git -C output
@@ -36,5 +40,6 @@ deploy : snapshot
 	$(output-git) push origin
 
 watch : all
-	@which watchman-make >/dev/null || { echo "Missing command 'watchman-make': brew install watchman >&2"; false; }
+	@which watchman-make >/dev/null \
+		|| { echo "Missing command 'watchman-make': brew install watchman >&2"; false; }
 	watchman-make -p pillar.conf template.mustache 'css/*.css' '*.pillar' -t all
