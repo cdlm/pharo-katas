@@ -34,8 +34,9 @@ $(SUPPORT) : $(DESTDIR)/% : % | $(DIRS)
 output-git = git -C output
 
 snapshot : all
-	$(output-git) add --all \
-		&& $(output-git) commit --message "Pillar export on $(shell date '+%Y-%m-%d %H:%M:%S')"
+	$(output-git) add --all
+	$(output-git) diff --quiet --exit-code --cached \
+		|| $(output-git) commit --message "Pillar export on $(shell date '+%Y-%m-%d %H:%M:%S')"
 
 deploy : snapshot
 	$(output-git) push origin
