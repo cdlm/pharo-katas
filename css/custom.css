@@ -109,3 +109,12 @@ pre {
 :not(pre) code {
     color: rgb(68, 102, 136);
 }
+
+.todo:before {
+    content: "[TODO] ";
+}
+
+.todo {
+    font-size: .85em;
+    color: #999;
+}

@@ -675,7 +675,7 @@ When a node receives a packet but is not the recipient, it should forward the pa
         ifFalse: [ self forward: aPacket from: aLink ]</code></pre><figcaption></figcaption></figure>
 
 <p>
-Now we need to implement packet forwarding, but there is an trap.
+Now we need to implement packet forwarding, but there is a trap.
 An easy solution would be to simply <code>send:</code> the packet again: the hub would send the packet to all its connected nodes, one of which happens to be <code>pc1</code>, the recipient, so all is good!
 </p>
 <p>
@@ -718,14 +718,96 @@ A hub does not have routing information, so all we can do is forward the packet 
 
 
 </section><section>
-<h3>3.2. Specializing other nodes</h3>
+<h3>3.2. Other examples of specialized nodes</h3>
 
+<p class="todo">this is out of place, it's not about packet delivery…</p>
+
+<section>
+<h4>Workstations count received packets</h4>
+
+<p>
+When a workstation consumes a packet, it simply increments a packet counter.
+</p>
+<p>
+Let's start by subclassing <code>KANetworkNode</code>:
+</p>
+<figure><pre><code class="smalltalk">KANetworkNode subclass: #KANetworkWorkstation
+    instanceVariableNames: 'receivedCount'
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'</code></pre><figcaption></figcaption></figure>
+
+<p>
+We need to initialize the <code>receivedCount</code> instance variable.
+Properly redefining <code>initialize:</code> is enough, because the address is initialized separately in the constructor method <code>KANetworkNode &gt;&gt; withAddress:</code>; however, it's really important not to forget the <code>super initialize</code> message, because that method does
+</p>
+<figure><pre><code class="smalltalk">KANetworkWorkstation &gt;&gt; initialize
+    super initialize.
+    receivedCount := 0</code></pre><figcaption></figcaption></figure>
+
+<p>
+Now we can redefine <code>consume:</code> accordingly:
+</p>
+<figure><pre><code class="smalltalk">KANetworkWorkstation &gt;&gt; consume: aPacket
+    receivedCount := receivedCount + 1</code></pre><figcaption></figcaption></figure>
+
+<p class="todo">accessor, printOn:</p>
 
 </section><section>
-<h3>3.3. Cycles and routing tables</h3>
+<h4>Printers accumulate printouts</h4>
 
+<p>
+When a printer consumes a packet, it prints it; we can model the output tray as a list where packet payloads get queued, and the supply tray as the number of blank sheets it contains.
+</p>
+<p>
+The implementation is very similar; we subclass <code>KANetworkNode</code> to redefine the <code>consume:</code> method:
+</p>
+<figure><pre><code class="smalltalk">KANetworkNode subclass: #KANetworkPrinter
+    instanceVariableNames: 'supply tray'
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'</code></pre><figcaption></figcaption></figure>
 
+<figure><pre><code class="smalltalk">KANetworkPrinter &gt;&gt; consume: aPacket
+    supply &gt; 0 ifTrue: [ ^ self &quot;no paper, do nothing&quot; ].
 
-</section></section></section>
+    supply := supply - 1.
+    tray add: aPacket payload</code></pre><figcaption></figcaption></figure>
+
+<p>
+Initialization is a bit different, though; since the standard <code>initialize</code> method has no argument, the only sensible initial value for the <code>supply</code> instance variable is zero:
+</p>
+<figure><pre><code class="smalltalk">KANetworkPrinter &gt;&gt; initialize
+    super initialize.
+    supply := 0.
+    tray := OrderedCollection new</code></pre><figcaption></figcaption></figure>
+
+<p>
+We therefore need a way to pass the initial supply of paper available to a fresh instance:
+</p>
+<figure><pre><code class="smalltalk">KANetworkPrinter &gt;&gt; resupply: paperSheets
+    supply := supply + paperSheets</code></pre><figcaption></figcaption></figure>
+
+<p>
+For convenience, we can provide an extended constructor to create printers with a non-empty supply in one message:
+</p>
+<figure><pre><code class="smalltalk">KANetworkPrinter class &gt;&gt; withAddress: anAddress initialSupply: paperSheets
+    ^ (self withAddress: anAddress)
+        resupply: paperSheets;
+        yourself</code></pre><figcaption></figcaption></figure>
+
+<p class="todo">accessors, printOn:</p>
+
+</section><section>
+<h4>Servers answer requests</h4>
+
+<p>
+When a server node consumes a packet, it converts the payload to uppercase, then sends that back to the sender of the request.
+</p>
+<p class="todo"></p>
+
+</section></section></section><section>
+<h2>4. Cycles and routing tables</h2>
+
+<p class="todo">automatic routing?</p>
+</section></section>
     </body>
 </html>
