@@ -1,0 +1,1 @@
+I am a simple illustration of subclassing KANetworkNode to implement workstation nodes that counts the packets they receive.

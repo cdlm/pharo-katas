@@ -1,7 +1,3 @@
 packet handling
 forward: aPacket from: arrivalLink
-	self
-		linksTowards: aPacket destinationAddress
-		do: [ :link |
-			link destination == arrivalLink source
-				ifFalse: [ self send: aPacket via: link ] ]
+	"Do nothing. Normal nodes do not route packets."

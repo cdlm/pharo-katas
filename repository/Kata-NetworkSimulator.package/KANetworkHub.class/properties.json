@@ -1,0 +1,14 @@
+{
+	"category" : "Kata-NetworkSimulator-Nodes",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "<historical>",
+	"instvars" : [
+		 ],
+	"name" : "KANetworkHub",
+	"pools" : [
+		 ],
+	"super" : "KANetworkNode",
+	"type" : "normal" }
