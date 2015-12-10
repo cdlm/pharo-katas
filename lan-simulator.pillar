@@ -745,7 +745,40 @@ KANetworkHub >> forward: aPacket from: arrivalLink
 
 @@todo this is out of place, it's not about packet delivery…
 
-!!!! Printers consume paper
+
+!!!! Workstations count received packets
+
+When a workstation consumes a packet, it simply increments a packet counter.
+
+Let's start by subclassing ==KANetworkNode==:
+
+[[[language=smalltalk
+KANetworkNode subclass: #KANetworkWorkstation
+    instanceVariableNames: 'receivedCount'
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'
+]]]
+
+We need to initialize the ==receivedCount== instance variable.
+Properly redefining ==initialize:== is enough, because the address is initialized separately in the constructor method ==KANetworkNode >> withAddress:==; however, it's really important not to forget the ==super initialize== message, because that method does
+
+[[[language=smalltalk
+initialize
+    super initialize.
+    receivedCount := 0
+]]]
+
+Now we can redefine ==consume:== accordingly:
+
+[[[language=smalltalk
+consume: aPacket
+    receivedCount := receivedCount + 1
+]]]
+
+@@todo accessor, printOn:
+
+
+!!!! Printers accumulate printouts
 
 When a printer consumes a packet, it prints it; we can model the output tray as a list where packet payloads get queued, and the supply tray as the number of blank sheets it contains.
 
