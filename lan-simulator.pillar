@@ -743,15 +743,25 @@ KANetworkHub >> forward: aPacket from: arrivalLink
 
 !!! Other examples of specialized nodes
 
+@@todo this is out of place, it's not about packet delivery…
 
 !!!! Printers consume paper
 
+When a printer consumes a packet, it prints it; we can model the output tray as a list where packet payloads get queued, and the supply tray as the number of blank sheets it contains.
+
+@@todo
+
+
 !!!! Servers answer requests
+
+When a server node consumes a packet, it converts the payload to uppercase, then sends that back to the sender of the request.
+
+@@todo
 
 
 !! Cycles and routing tables
 
-
+@@todo automatic routing?
 
 % Local Variables:
 % tab-width: 4
