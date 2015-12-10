@@ -25,7 +25,7 @@ $(DESTDIR) :
 $(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.mustache | $(DESTDIR)
 	pillar/pillar export
 
-$(DIRS) : $(DESTDIR)
+$(DIRS) : | $(DESTDIR)
 	mkdir -p $@
 
 $(SUPPORT) : $(DESTDIR)/% : % | $(DIRS)
