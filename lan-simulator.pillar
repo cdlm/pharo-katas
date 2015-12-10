@@ -763,7 +763,7 @@ We need to initialize the ==receivedCount== instance variable.
 Properly redefining ==initialize:== is enough, because the address is initialized separately in the constructor method ==KANetworkNode >> withAddress:==; however, it's really important not to forget the ==super initialize== message, because that method does
 
 [[[language=smalltalk
-initialize
+KANetworkWorkstation >> initialize
     super initialize.
     receivedCount := 0
 ]]]
@@ -771,7 +771,7 @@ initialize
 Now we can redefine ==consume:== accordingly:
 
 [[[language=smalltalk
-consume: aPacket
+KANetworkWorkstation >> consume: aPacket
     receivedCount := receivedCount + 1
 ]]]
 
