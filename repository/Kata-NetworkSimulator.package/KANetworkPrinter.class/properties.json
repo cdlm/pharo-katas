@@ -1,0 +1,15 @@
+{
+	"category" : "Kata-NetworkSimulator-Nodes",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "<historical>",
+	"instvars" : [
+		"supply",
+		"tray" ],
+	"name" : "KANetworkPrinter",
+	"pools" : [
+		 ],
+	"super" : "KANetworkNode",
+	"type" : "normal" }

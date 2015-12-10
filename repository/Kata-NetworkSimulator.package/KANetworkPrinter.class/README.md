@@ -1,0 +1,1 @@
+I represent a network printer; each packet I receive consumes one sheet from my supply of paper, and appends the packet's payload to the output tray.
