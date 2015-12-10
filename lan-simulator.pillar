@@ -782,7 +782,49 @@ KANetworkWorkstation >> consume: aPacket
 
 When a printer consumes a packet, it prints it; we can model the output tray as a list where packet payloads get queued, and the supply tray as the number of blank sheets it contains.
 
-@@todo
+The implementation is very similar; we subclass ==KANetworkNode== to redefine the ==consume:== method:
+
+[[[language=smalltalk
+KANetworkNode subclass: #KANetworkPrinter
+    instanceVariableNames: 'supply tray'
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'
+]]]
+
+[[[language=smalltalk
+KANetworkPrinter >> consume: aPacket
+    supply > 0 ifTrue: [ ^ self "no paper, do nothing" ].
+
+    supply := supply - 1.
+    tray add: aPacket payload
+]]]
+
+Initialization is a bit different, though; since the standard ==initialize== method has no argument, the only sensible initial value for the ==supply== instance variable is zero:
+
+[[[language=smalltalk
+KANetworkPrinter >> initialize
+    super initialize.
+    supply := 0.
+    tray := OrderedCollection new
+]]]
+
+We therefore need a way to pass the initial supply of paper available to a fresh instance:
+
+[[[language=smalltalk
+KANetworkPrinter >> resupply: paperSheets
+    supply := supply + paperSheets
+]]]
+
+For convenience, we can provide an extended constructor to create printers with a non-empty supply in one message:
+
+[[[language=smalltalk
+KANetworkPrinter class >> withAddress: anAddress initialSupply: paperSheets
+    ^ (self withAddress: anAddress)
+        resupply: paperSheets;
+        yourself
+]]]
+
+@@todo accessors, printOn:
 
 
 !!!! Servers answer requests
