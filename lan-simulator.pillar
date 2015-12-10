@@ -700,7 +700,7 @@ KANetworkNode >> receive: aPacket from: aLink
         ifFalse: [ self forward: aPacket from: aLink ]
 ]]]
 
-Now we need to implement packet forwarding, but there is an trap.
+Now we need to implement packet forwarding, but there is a trap.
 An easy solution would be to simply ==send:== the packet again: the hub would send the packet to all its connected nodes, one of which happens to be ==pc1==, the recipient, so all is good!
 
 Wrong.
@@ -741,10 +741,15 @@ KANetworkHub >> forward: aPacket from: arrivalLink
 ]]]
 
 
-!!! Specializing other nodes
+!!! Other examples of specialized nodes
 
 
-!!! Cycles and routing tables
+!!!! Printers consume paper
+
+!!!! Servers answer requests
+
+
+!! Cycles and routing tables
 
 
 
