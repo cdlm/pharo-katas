@@ -1,3 +1,3 @@
 packet handling
 consume: aPacket 
-	arrivedPackets add: aPacket
+	"Default handling is to do nothing."

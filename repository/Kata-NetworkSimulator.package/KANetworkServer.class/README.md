@@ -1,0 +1,1 @@
+I represent a simple stateless server. When I receive a packet, I send one back to its originator, with the payload converted to uppercase.

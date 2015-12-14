@@ -4,7 +4,7 @@ buildNetwork
 	
 	net := KANetwork new.
 	
-	hub := KANetworkNode withAddress: #hub.
+	hub := KANetworkHub withAddress: #hub.
 	#(mac pc1 pc2 prn) do: [ :addr |
 		| node |
 		node := KANetworkNode withAddress: addr.
