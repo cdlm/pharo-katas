@@ -341,11 +341,21 @@ Nodes only consume packets addressed to them; this is what will happen in our te
 [[[language=smalltalk
 KANetworkNode >> receive: aPacket from: aLink
     aPacket destinationAddress = address
-        ifTrue: [ self consume: aPacket ]
+        ifTrue: [
+            self consume: aPacket.
+            arrivedPackets add: aPacket ]
         ifFalse: [ self notYetImplemented ]
 ]]]
 
-Consuming a packet represents what the node will do with it; for general simulations, we only need to remember which packets did arrive:
+Consuming a packet represents what the node will do with it at the application level; for the moment, let's just define an empty ==consume:== method, as a template for later:
+
+[[[language=smalltalk
+KANetworkNode >> consume: aPacket
+    "Default handling is to do nothing."
+]]]
+
+Additionally to consuming the packet, we remember it did arrive; for now this is mostly for our tests and for debug, but we could see that becoming useful in the future, if we want to simulate packet losses and re-emissions.
+We thus add the ==arrivedPackets== instance variable, with proper initialization and accessing:
 
 [[[language=smalltalk
 Object subclass: #KANetworkNode
@@ -360,20 +370,13 @@ KANetworkNode >> initialize
     arrivedPackets := OrderedCollection new
 ]]]
 
-We define a simple ==consume:== method: it simply adds the packet to a list of arrived packets.
-
-[[[language=smalltalk
-KANetworkNode >> consume: aPacket
-    arrivedPackets add: aPacket
-]]]
-
 [[[language=smalltalk
 KANetworkNode >> hasReceived: aPacket
     ^ arrivedPackets includes: aPacket
 ]]]
 
 At that point all our tests should pass.
-Note that the message ==notYetImplemented== is not called, since our tests do not require routing.
+Note that the message ==notYetImplemented== is not called, since our tests do not require routing (yet).
 
 
 !!! A standalone node can transmit a packet to itself
@@ -696,7 +699,9 @@ When a node receives a packet but is not the recipient, it should forward the pa
 [[[language=smalltalk
 KANetworkNode >> receive: aPacket from: aLink
     aPacket destinationAddress = address
-        ifTrue: [ self consume: aPacket ]
+        ifTrue: [
+            self consume: aPacket.
+            arrivedPackets add: aPacket ]
         ifFalse: [ self forward: aPacket from: aLink ]
 ]]]
 
