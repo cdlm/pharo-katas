@@ -338,11 +338,20 @@ Nodes only consume packets addressed to them; this is what will happen in our te
 </p>
 <figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; receive: aPacket from: aLink
     aPacket destinationAddress = address
-        ifTrue: [ self consume: aPacket ]
+        ifTrue: [
+            self consume: aPacket.
+            arrivedPackets add: aPacket ]
         ifFalse: [ self notYetImplemented ]</code></pre><figcaption></figcaption></figure>
 
 <p>
-Consuming a packet represents what the node will do with it; for general simulations, we only need to remember which packets did arrive:
+Consuming a packet represents what the node will do with it at the application level; for the moment, let's just define an empty <code>consume:</code> method, as a template for later:
+</p>
+<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; consume: aPacket
+    &quot;Default handling is to do nothing.&quot;</code></pre><figcaption></figcaption></figure>
+
+<p>
+Additionally to consuming the packet, we remember it did arrive; for now this is mostly for our tests and for debug, but we could see that becoming useful in the future, if we want to simulate packet losses and re-emissions.
+We thus add the <code>arrivedPackets</code> instance variable, with proper initialization and accessing:
 </p>
 <figure><pre><code class="smalltalk">Object subclass: #KANetworkNode
     instanceVariableNames: 'address outgoingLinks arrivedPackets'
@@ -353,18 +362,12 @@ Consuming a packet represents what the node will do with it; for general simulat
     outgoingLinks := Set new.
     arrivedPackets := OrderedCollection new</code></pre><figcaption></figcaption></figure>
 
-<p>
-We define a simple <code>consume:</code> method: it simply adds the packet to a list of arrived packets.
-</p>
-<figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; consume: aPacket
-    arrivedPackets add: aPacket</code></pre><figcaption></figcaption></figure>
-
 <figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; hasReceived: aPacket
     ^ arrivedPackets includes: aPacket</code></pre><figcaption></figcaption></figure>
 
 <p>
 At that point all our tests should pass.
-Note that the message <code>notYetImplemented</code> is not called, since our tests do not require routing.
+Note that the message <code>notYetImplemented</code> is not called, since our tests do not require routing (yet).
 </p>
 
 </section></section><section>
@@ -671,7 +674,9 @@ When a node receives a packet but is not the recipient, it should forward the pa
 </p>
 <figure><pre><code class="smalltalk">KANetworkNode &gt;&gt; receive: aPacket from: aLink
     aPacket destinationAddress = address
-        ifTrue: [ self consume: aPacket ]
+        ifTrue: [
+            self consume: aPacket.
+            arrivedPackets add: aPacket ]
         ifFalse: [ self forward: aPacket from: aLink ]</code></pre><figcaption></figcaption></figure>
 
 <p>
@@ -715,6 +720,11 @@ A hub does not have routing information, so all we can do is forward the packet 
         do: [ :link |
             link destination == arrivalLink source
                 ifFalse: [ self send: aPacket via: link ] ]</code></pre><figcaption></figcaption></figure>
+
+<p>
+Now we can use a proper hub in our test, replacing the relevant line in <code>KANetworkTest &gt;&gt; buildNetwork:</code>, and check that the <code>testSendViaHub</code> unit test passes.
+</p>
+<figure><pre><code class="smalltalk">    hub := KANetworkHub withAddress: #hub.</code></pre><figcaption></figcaption></figure>
 
 
 </section><section>
@@ -802,6 +812,22 @@ For convenience, we can provide an extended constructor to create printers with 
 <p>
 When a server node consumes a packet, it converts the payload to uppercase, then sends that back to the sender of the request.
 </p>
+<p>
+This is yet another subclass which redefines the <code>consume:</code> method, but this time the node is stateless, so we have no initialization or accessor methods to write:
+</p>
+<figure><pre><code class="smalltalk">KANetworkNode subclass: #KANetworkServer
+    instanceVariableNames: ''
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'</code></pre><figcaption></figcaption></figure>
+
+<figure><pre><code class="smalltalk">consume: aPacket
+    | response |
+    response := aPacket payload asUppercase.
+    self send: (KANetworkPacket
+        from: self address
+        to: aPacket sourceAddress
+        payload: response)</code></pre><figcaption></figcaption></figure>
+
 <p class="todo"></p>
 
 </section></section></section><section>
