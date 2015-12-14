@@ -836,6 +836,25 @@ KANetworkPrinter class >> withAddress: anAddress initialSupply: paperSheets
 
 When a server node consumes a packet, it converts the payload to uppercase, then sends that back to the sender of the request.
 
+This is yet another subclass which redefines the ==consume:== method, but this time the node is stateless, so we have no initialization or accessor methods to write:
+
+[[[language=smalltalk
+KANetworkNode subclass: #KANetworkServer
+    instanceVariableNames: ''
+    classVariableNames: ''
+    category: 'NetworkSimulator-Nodes'
+]]]
+
+[[[language=smalltalk
+consume: aPacket
+    | response |
+    response := aPacket payload asUppercase.
+    self send: (KANetworkPacket
+        from: self address
+        to: aPacket sourceAddress
+        payload: response)
+]]]
+
 @@todo
 
 
