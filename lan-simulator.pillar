@@ -745,6 +745,12 @@ KANetworkHub >> forward: aPacket from: arrivalLink
                 ifFalse: [ self send: aPacket via: link ] ]
 ]]]
 
+Now we can use a proper hub in our test, replacing the relevant line in ==KANetworkTest >> buildNetwork:==, and check that the ==testSendViaHub== unit test passes.
+
+[[[language=smalltalk
+    hub := KANetworkHub withAddress: #hub.
+]]]
+
 
 !!! Other examples of specialized nodes
 
