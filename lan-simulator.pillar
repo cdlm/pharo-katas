@@ -786,7 +786,7 @@ KANetworkWorkstation >> consume: aPacket
     receivedCount := receivedCount + 1
 ]]]
 
-@@todo accessor, printOn:
+@@todo Define accessors and the ==printOn:== method, for debugging. Test the behavior of workstation nodes.
 
 
 !!!! Printers accumulate printouts
@@ -835,7 +835,7 @@ KANetworkPrinter class >> withAddress: anAddress initialSupply: paperSheets
         yourself
 ]]]
 
-@@todo accessors, printOn:
+@@todo Define accessors and the ==printOn:== method, for debugging. Test the behavior of printer nodes.
 
 
 !!!! Servers answer requests
@@ -861,7 +861,7 @@ consume: aPacket
         payload: response)
 ]]]
 
-@@todo
+@@todo Define accessors and the ==printOn:== method, for debugging. Test the behavior of server nodes.
 
 
 !! Cycles and routing tables
