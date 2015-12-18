@@ -870,6 +870,38 @@ Let's now model a more realistic network with a cycle between three central node
 
 +file://images/lan-routes.svg|width=50+
 
+Since we want to keep the previous tests unchanged, we define a new test class with a different ==buildNetwork== method:
+
+[[[language=smalltalk
+TestCase subclass: #KARoutingNetworkTest
+    instanceVariableNames: 'net'
+    classVariableNames: ''
+    category: 'Kata-NetworkSimulator-Tests'
+]]]
+
+[[[language=smalltalk
+KARoutingNetworkTest >> setUp
+    self buildNetwork
+]]]
+
+[[[language=smalltalk
+KARoutingNetworkTest >> buildNetwork
+    | routers |
+    net := KANetwork new.
+
+    routers := #(A B C) collect: [ :each | KANetworkHub withAddress: each ].
+    net connect: routers first to: routers second.
+    net connect: routers second to: routers third.
+    net connect: routers third to: routers first.
+
+    #(a1 a2) do: [ :addr |
+        net connect: routers first to: (KANetworkNode withAddress: addr) ].
+    #(b1 b2 b3) do: [ :addr |
+        net connect: routers second to: (KANetworkNode withAddress: addr) ].
+    net connect: routers third to: (KANetworkNode withAddress: #c1)
+]]]
+
+
 @@todo automatic routing?
 
 % Local Variables:
