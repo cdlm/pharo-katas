@@ -852,7 +852,7 @@ KANetworkNode subclass: #KANetworkServer
 ]]]
 
 [[[language=smalltalk
-consume: aPacket
+KANetworkServer >> consume: aPacket
     | response |
     response := aPacket payload asUppercase.
     self send: (KANetworkPacket
