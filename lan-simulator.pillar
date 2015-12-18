@@ -866,6 +866,10 @@ consume: aPacket
 
 !! Cycles and routing tables
 
+Let's now model a more realistic network with a cycle between three central nodes:
+
++file://images/lan-routes.svg|width=50+
+
 @@todo automatic routing?
 
 % Local Variables:

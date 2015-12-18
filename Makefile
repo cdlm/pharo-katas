@@ -3,11 +3,14 @@
 DESTDIR = output
 OUTPUTS = $(addprefix $(DESTDIR)/, \
 	index.html \
-	lan-simulator.html )
+	lan-simulator.html \
+)
 SUPPORT = $(addprefix $(DESTDIR)/, \
 	css/remarkdown.css \
 	css/custom.css \
-	images/lan-star.svg )
+	images/lan-star.svg \
+	images/lan-routes.svg \
+)
 
 ALL = $(OUTPUTS) $(SUPPORT)
 DIRS = $(sort $(foreach f,$(SUPPORT),$(dir $(f))))
