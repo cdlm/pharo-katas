@@ -760,7 +760,7 @@ Now we can redefine <code>consume:</code> accordingly:
 <figure><pre><code class="smalltalk">KANetworkWorkstation &gt;&gt; consume: aPacket
     receivedCount := receivedCount + 1</code></pre><figcaption></figcaption></figure>
 
-<p class="todo">accessor, printOn:</p>
+<p class="todo">Define accessors and the <code>printOn:</code> method, for debugging. Test the behavior of workstation nodes.</p>
 
 </section><section>
 <h4>Printers accumulate printouts</h4>
@@ -804,7 +804,7 @@ For convenience, we can provide an extended constructor to create printers with 
         resupply: paperSheets;
         yourself</code></pre><figcaption></figcaption></figure>
 
-<p class="todo">accessors, printOn:</p>
+<p class="todo">Define accessors and the <code>printOn:</code> method, for debugging. Test the behavior of printer nodes.</p>
 
 </section><section>
 <h4>Servers answer requests</h4>
@@ -820,7 +820,7 @@ This is yet another subclass which redefines the <code>consume:</code> method, b
     classVariableNames: ''
     category: 'NetworkSimulator-Nodes'</code></pre><figcaption></figcaption></figure>
 
-<figure><pre><code class="smalltalk">consume: aPacket
+<figure><pre><code class="smalltalk">KANetworkServer &gt;&gt; consume: aPacket
     | response |
     response := aPacket payload asUppercase.
     self send: (KANetworkPacket
@@ -828,10 +828,43 @@ This is yet another subclass which redefines the <code>consume:</code> method, b
         to: aPacket sourceAddress
         payload: response)</code></pre><figcaption></figcaption></figure>
 
-<p class="todo"></p>
+<p class="todo">Define accessors and the <code>printOn:</code> method, for debugging. Test the behavior of server nodes.</p>
 
 </section></section></section><section>
 <h2>4. Cycles and routing tables</h2>
+
+<p>
+Let's now model a more realistic network with a cycle between three central nodes:
+</p>
+<p>
+<img src="images/lan-routes.svg" width="50%"/>
+</p>
+<p>
+Since we want to keep the previous tests unchanged, we define a new test class with a different <code>buildNetwork</code> method:
+</p>
+<figure><pre><code class="smalltalk">TestCase subclass: #KARoutingNetworkTest
+    instanceVariableNames: 'net'
+    classVariableNames: ''
+    category: 'Kata-NetworkSimulator-Tests'</code></pre><figcaption></figcaption></figure>
+
+<figure><pre><code class="smalltalk">KARoutingNetworkTest &gt;&gt; setUp
+    self buildNetwork</code></pre><figcaption></figcaption></figure>
+
+<figure><pre><code class="smalltalk">KARoutingNetworkTest &gt;&gt; buildNetwork
+    | routers |
+    net := KANetwork new.
+
+    routers := #(A B C) collect: [ :each | KANetworkHub withAddress: each ].
+    net connect: routers first to: routers second.
+    net connect: routers second to: routers third.
+    net connect: routers third to: routers first.
+
+    #(a1 a2) do: [ :addr |
+        net connect: routers first to: (KANetworkNode withAddress: addr) ].
+    #(b1 b2 b3) do: [ :addr |
+        net connect: routers second to: (KANetworkNode withAddress: addr) ].
+    net connect: routers third to: (KANetworkNode withAddress: #c1)</code></pre><figcaption></figcaption></figure>
+
 
 <p class="todo">automatic routing?</p>
 </section></section>
