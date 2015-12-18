@@ -1,0 +1,14 @@
+{
+	"category" : "Kata-NetworkSimulator-Tests",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"net" ],
+	"name" : "KARoutingNetworkTest",
+	"pools" : [
+		 ],
+	"super" : "TestCase",
+	"type" : "normal" }
