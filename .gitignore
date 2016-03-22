@@ -1,3 +1,9 @@
-/README.html
 *.html
 /output
+.auctex
+pillar
+Pharo.image
+Pharo.changes
+/package-cache
+/play-cache
+/pillarPostExport.sh
