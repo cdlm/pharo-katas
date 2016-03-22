@@ -25,7 +25,7 @@ $(DESTDIR) :
 	git worktree add $(DESTDIR) gh-pages
 	rm -f $(ALL)
 
-$(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.mustache | $(DESTDIR)
+$(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.html.mustache | $(DESTDIR)
 	pillar/pillar export
 
 $(DIRS) : | $(DESTDIR)
@@ -47,4 +47,4 @@ deploy : snapshot
 watch : all
 	@which watchman-make >/dev/null \
 		|| { echo "Missing command 'watchman-make': brew install watchman >&2"; false; }
-	watchman-make -p pillar.conf template.mustache 'css/*.css' '*.pillar' -t all
+	watchman-make -p pillar.conf template.html.mustache 'css/*.css' '*.pillar' -t all
