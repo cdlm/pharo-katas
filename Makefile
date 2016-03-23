@@ -1,38 +1,53 @@
 .phony : all clean snapshot deploy watch
 
-DESTDIR = output
-OUTPUTS = $(addprefix $(DESTDIR)/, \
-	index.html \
-	lan-simulator.html \
-)
-SUPPORT = $(addprefix $(DESTDIR)/, \
+FILES := index lan-simulator
+IMAGES := lan-star lan-routes
+DESTDIR := output
+BUILDIR := build
+
+HTML_OUTPUTS := $(FILES:%=$(DESTDIR)/%.html)
+PDF_OUTPUTS := $(FILES:%=$(DESTDIR)/%.pdf)
+TEX_OUTPUTS := $(FILES:%=$(BUILDIR)/%.tex)
+
+HTML_SUPPORT := $(addprefix $(DESTDIR)/, \
 	css/remarkdown.css \
 	css/custom.css \
-	images/lan-star.svg \
-	images/lan-routes.svg \
+	$(IMAGES:%=images/%.svg) \
 )
+TEX_SUPPORT := $(IMAGES:%=$(BUILDIR)/images/%.pdf)
 
-ALL = $(OUTPUTS) $(SUPPORT)
-DIRS = $(sort $(foreach f,$(SUPPORT),$(dir $(f))))
+ALL = $(HTML_OUTPUTS) $(HTML_SUPPORT) $(PDF_OUTPUTS)
 
 all : $(ALL)
 
 clean :
-	rm -fr $(DESTDIR)
+	rm -fr $(DESTDIR) $(BUILDIR) pillarPostExport.sh
 	git worktree prune --verbose
 
 $(DESTDIR) :
 	git worktree add $(DESTDIR) gh-pages
 	rm -f $(ALL)
 
-$(OUTPUTS) : $(DESTDIR)/%.html : %.pillar pillar.conf template.html.mustache | $(DESTDIR)
-	pillar/pillar export
+$(BUILDIR) :
+	mkdir $(BUILDIR)
 
-$(DIRS) : | $(DESTDIR)
-	mkdir -p $@
+$(PDF_OUTPUTS) : $(DESTDIR)/%.pdf : $(BUILDIR)/%.tex $(TEX_SUPPORT)
+	latexmk -cd $<
+	ln -f $(BUILDIR)/$*.pdf $@
 
-$(SUPPORT) : $(DESTDIR)/% : % | $(DIRS)
-	cp $< $@
+$(DESTDIR)/%.html : template.html.mustache
+$(BUILDIR)/%.tex : template.latex.mustache
+$(DESTDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(DESTDIR) $(BUILDIR)
+	pillar/pillar export $<
+	sed -ie '/^\\includegraphics/s/\.svg//' $(BUILDIR)/$*.tex
+
+$(HTML_SUPPORT) : $(DESTDIR)/% : %
+	mkdir -p $(@D)
+	ln $< $@
+
+$(TEX_SUPPORT) : $(BUILDIR)/% : %
+	mkdir -p $(@D)
+	ln $< $@
 
 output-git = git -C output
 

@@ -1,9 +1,10 @@
 *.html
-/output
 .auctex
-pillar
-Pharo.image
-Pharo.changes
+/output
 /package-cache
-/play-cache
 /pillarPostExport.sh
+/play-cache
+Pharo.changes
+Pharo.image
+build
+pillar
