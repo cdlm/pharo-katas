@@ -1,4 +1,4 @@
-.phony : all clean snapshot deploy watch
+.phony : all clean realclean snapshot deploy watch
 
 FILES := index lan-simulator
 IMAGES := lan-star lan-routes
@@ -14,40 +14,40 @@ HTML_SUPPORT := $(addprefix $(DESTDIR)/, \
 	css/custom.css \
 	$(IMAGES:%=images/%.svg) \
 )
-TEX_SUPPORT := $(IMAGES:%=$(BUILDIR)/images/%.pdf)
 
 ALL = $(HTML_OUTPUTS) $(HTML_SUPPORT) $(PDF_OUTPUTS)
 
 all : $(ALL)
 
 clean :
-	rm -fr $(DESTDIR) $(BUILDIR) pillarPostExport.sh
+	rm -fr $(BUILDIR) pillarPostExport.sh
+
+realclean : clean
+	rm -fr $(DESTDIR)
 	git worktree prune --verbose
 
 $(DESTDIR) :
+	git worktree prune
 	git worktree add $(DESTDIR) gh-pages
 	rm -f $(ALL)
+
+$(HTML_OUTPUTS) $(PDF_OUTPUTS) : $(DESTDIR)/% : $(BUILDIR)/% | $(DESTDIR)
+	cp $< $@
+
+$(HTML_SUPPORT) : $(DESTDIR)/% : % | $(DESTDIR)
+	mkdir -p $(@D) && cp $< $@
 
 $(BUILDIR) :
 	mkdir $(BUILDIR)
 
-$(PDF_OUTPUTS) : $(DESTDIR)/%.pdf : $(BUILDIR)/%.tex $(TEX_SUPPORT)
-	latexmk -cd $<
-	ln -f $(BUILDIR)/$*.pdf $@
+$(BUILDIR)/%.pdf : $(BUILDIR)/%.tex
+	TEXINPUTS=../:../latex/sbabook/: texfot latexmk -cd $<
 
-$(DESTDIR)/%.html : template.html.mustache
+$(BUILDIR)/%.html : template.html.mustache
 $(BUILDIR)/%.tex : template.latex.mustache
-$(DESTDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(DESTDIR) $(BUILDIR)
+$(BUILDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(BUILDIR)
 	pillar/pillar export $<
 	sed -ie '/^\\includegraphics/s/\.svg//' $(BUILDIR)/$*.tex
-
-$(HTML_SUPPORT) : $(DESTDIR)/% : %
-	mkdir -p $(@D)
-	ln $< $@
-
-$(TEX_SUPPORT) : $(BUILDIR)/% : %
-	mkdir -p $(@D)
-	ln $< $@
 
 output-git = git -C output
 
