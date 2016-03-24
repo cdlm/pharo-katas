@@ -1,4 +1,4 @@
-.phony : all clean realclean snapshot deploy watch
+.phony : all clean realclean prune snapshot deploy watch
 
 KATAS := lan-simulator
 FILES := index $(KATAS)
@@ -30,7 +30,9 @@ realclean : clean
 $(DESTDIR) :
 	git worktree prune
 	git worktree add $(DESTDIR) gh-pages
-	rm -f $(ALL)
+
+prune:
+	find $(DESTDIR) -mindepth 1 ! -name .git -delete
 
 $(HTML_OUTPUTS) $(PDF_OUTPUTS) : $(DESTDIR)/% : $(BUILDIR)/% | $(DESTDIR)
 	cp $< $@
@@ -52,7 +54,7 @@ $(BUILDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(BUILDIR)
 
 output-git = git -C output
 
-snapshot : all
+snapshot : prune all
 	$(output-git) add --all
 	$(output-git) diff --quiet --exit-code --cached \
 		|| $(output-git) commit --message "Pillar export on $(shell date '+%Y-%m-%d %H:%M:%S')"
