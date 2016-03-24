@@ -40,11 +40,11 @@ $(HTML_SUPPORT) : $(DESTDIR)/% : % | $(DESTDIR)
 $(BUILDIR) :
 	mkdir $(BUILDIR)
 
-$(BUILDIR)/%.pdf : $(BUILDIR)/%.tex
+$(BUILDIR)/%.pdf %(BUILDIR)/%.d : $(BUILDIR)/%.tex
 	TEXINPUTS=../:../latex/sbabook/: texfot latexmk -cd $<
 
-$(BUILDIR)/%.html : template.html.mustache
-$(BUILDIR)/%.tex : template.latex.mustache
+$(FILES:%=$(BUILDIR)/%.html) : template.html.mustache
+$(FILES:%=$(BUILDIR)/%.tex) : template.latex.mustache
 $(BUILDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(BUILDIR)
 	pillar/pillar export $<
 	sed -ie '/^\\includegraphics/s/\.svg//' $(BUILDIR)/$*.tex
