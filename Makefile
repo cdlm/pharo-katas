@@ -1,13 +1,14 @@
 .phony : all clean realclean snapshot deploy watch
 
-FILES := index lan-simulator
+KATAS := lan-simulator
+FILES := index $(KATAS)
 IMAGES := lan-star lan-routes
 DESTDIR := output
 BUILDIR := build
 
 HTML_OUTPUTS := $(FILES:%=$(DESTDIR)/%.html)
-PDF_OUTPUTS := $(FILES:%=$(DESTDIR)/%.pdf)
-TEX_OUTPUTS := $(FILES:%=$(BUILDIR)/%.tex)
+PDF_OUTPUTS := $(KATAS:%=$(DESTDIR)/%.pdf)
+TEX_OUTPUTS := $(KATAS:%=$(BUILDIR)/%.tex)
 
 HTML_SUPPORT := $(addprefix $(DESTDIR)/, \
 	css/remarkdown.css \
@@ -43,8 +44,8 @@ $(BUILDIR) :
 $(BUILDIR)/%.pdf %(BUILDIR)/%.d : $(BUILDIR)/%.tex
 	TEXINPUTS=../:../latex/sbabook/: texfot latexmk -cd $<
 
-$(FILES:%=$(BUILDIR)/%.html) : template.html.mustache
-$(FILES:%=$(BUILDIR)/%.tex) : template.latex.mustache
+$(BUILDIR)/*.html : template.html.mustache
+$(BUILDIR)/*.tex : template.latex.mustache
 $(BUILDIR)/%.html $(BUILDIR)/%.tex : %.pillar pillar.conf | $(BUILDIR)
 	pillar/pillar export $<
 	sed -ie '/^\\includegraphics/s/\.svg//' $(BUILDIR)/$*.tex
