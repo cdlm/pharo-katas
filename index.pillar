@@ -1,6 +1,5 @@
 { "title": "Pharo development examples and exercises" }
 
-! Pharo development examples and exercises
 
 *This repository>https://github.com/cdlm/pharo-katas* contains small *Pharo>http://pharo.org* programs to be used as development examples or use-cases during programming courses.
 

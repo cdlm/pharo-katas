@@ -1,6 +1,5 @@
-{ "title": "A simple network simulator" }
+{ "title": "Designing a simple network simulator" }
 
-! Designing a simple network simulation platform
 
 This document will show how we develop a simulator for a computer network, from scratch, and step by step.
 The program we are going to develop is a simple representation of a computer network: it consists of objects that represent different parts of a local network such as packets, nodes, workstations, routers and hubs.

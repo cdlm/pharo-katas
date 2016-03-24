@@ -1,11 +1,14 @@
 % -*- mode: latex; -*- mustache tags: {{=« »=}}
-\documentclass[10pt,twoside,english]{sbabook}
+\documentclass[10pt,twoside,article,english]{sbabook}
 \usepackage{import}
 \subimport{latex/}{common}
 
+\pagestyle{sba-plain}
+\counterwithout{section}{chapter}
+
 \begin{document}
 
-\section*{«& title»}
+\chapter*{«& title»}
 
 «& content»
 
