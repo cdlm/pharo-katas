@@ -9,7 +9,7 @@ We also slightly shorten package names for concision.
 
 Currently, there is only the following example program:
 
-- A simple *simulation of a computer network>./lan-simulator.pillar*, showing how packets are delivered (package ==Kata-NetworkSimulator==).
+- A simple *simulation of a computer network>./lan-simulator.pillar*, showing how packets are delivered (package ==Kata-NetworkSimulator==). *PDF>./lan-simulator.pdf*
 
 
 % Local Variables:
